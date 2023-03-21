@@ -7,11 +7,27 @@ import yaml
 import subprocess
 import sys
 import logging
+from github import Github
+
 
 FORMAT = '[%(asctime)s] - %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger('add_changelog')
 logger.setLevel(logging.DEBUG)
+
+
+CHANGES_TYPE = (
+    "release_summary", "breaking_changes", "major_changes", "minor_changes", "removed_features",
+    "deprecated_features", "security_fixes", "bugfixes", "known_issues", "trivial",
+)
+
+PLUGINS_PREFIXES = (
+    "plugins/modules", "plugins/action", "plugins/inventory", "plugins/lookup", "plugins/filter",
+    "plugins/connection", "plugins/become", "plugins/cache", "plugins/callback", "plugins/cliconf",
+    "plugins/httpapi", "plugins/netconf", "plugins/shell", "plugins/strategy", "plugins/terminal",
+    "plugins/test", "plugins/vars",
+)
+DOCS_PREFIXES = ("docs/", "plugins/doc_fragments")
 
 
 def run_command(cmd, **kwargs):
@@ -30,11 +46,12 @@ class ChangeLogValidator(object):
 
     CHANGELOG_RE = re.compile(r"^changelogs/fragments/(.*)\.(yaml|yml)$")
 
-    def __init__(self, base_ref):
+    def __init__(self, base_ref, labels):
 
         self.base_ref = base_ref
         self._changes = None
         self._changelogs = None
+        self._labels = labels
 
     def _list_changes(self):
         cmd = "git diff origin/{0} --name-status".format(self.base_ref)
@@ -75,42 +92,36 @@ class ChangeLogValidator(object):
             changelog is not required for pull request adding new module/plugin
             or updating documentation
         """
+        if 'skip-changelog' in self._labels:
+            logger.info("Pull request contains label 'skip-changelog'")
+            return False
+
         logger.info("check if changelog is required for this pull request")
-        PLUGINS_PREFIXES = (
-            "plugins/modules", "plugins/action", "plugins/inventory", "plugins/lookup", "plugins/filter",
-            "plugins/connection", "plugins/become", "plugins/cache", "plugins/callback", "plugins/cliconf",
-            "plugins/httpapi", "plugins/netconf", "plugins/shell", "plugins/strategy", "plugins/terminal",
-            "plugins/test", "plugins/vars",
-        )
-        DOCS_PREFIXES = ("docs/", "plugins/doc_fragments")
 
         new_plugin = lambda y: any(y.startswith(x) for x in PLUGINS_PREFIXES)
         doc_update = lambda y: any(y.startswith(x) for x in DOCS_PREFIXES)
 
         # Validate Pull request add new modules and plugins
         if any([new_plugin(x) for x in self.changes["A"]]):
-            return True
+            return False
 
         # Validate documentation changes only
         if all([doc_update(x) for x in self.changes["A"] + self.changes["M"] + self.changes["D"]]):
-            return True
+            return False
 
-        return False
+        return True
 
     @staticmethod
     def is_valid_changelog(path):        
         try:
             # https://github.com/ansible-community/antsibull-changelog/blob/main/docs/changelogs.rst#changelog-fragment-categories
-            changes_type = (
-                "release_summary", "breaking_changes", "major_changes", "minor_changes", "removed_features",
-                "deprecated_features", "security_fixes", "bugfixes", "known_issues", "trivial",
-            )
+            
             with open(path, "rb") as f:
                 result = list(yaml.safe_load_all(f))
 
             for section in result:
                 for key in section.keys():
-                    if key not in changes_type:
+                    if key not in CHANGES_TYPE:
                         logger.info("Unexpected changelog section {0} from file {1}".format(key, os.path.basename(path)))
                         return False
                     if not isinstance(section[key], list):
@@ -131,27 +142,122 @@ class ChangeLogValidator(object):
         return all(self.is_valid_changelog(c) for c in self.changelogs)
 
 
+class GitHubRepo(object):
+
+    CLOSES_REF_RE = re.compile(r"^closes[ ]*#([0-9]*)", re.MULTILINE | re.IGNORECASE)
+
+    def __init__(self, repo_name, pr_number):
+
+        self.pr_number = pr_number
+        self.repo_name = repo_name
+        
+        access_token = os.environ.get("GITHUB_TOKEN")
+        gh = Github(access_token)
+        self.gh_repo = gh.get_repo(repo_name)
+        # print(dir(self.gh_repo))
+        self.gh_pr = self.gh_repo.get_pull(pr_number)
+
+    @property
+    def labels(self):
+        return [i.name for i in self.gh_pr.labels]
+
+    @property
+    def body(self):
+        return self.gh_pr.body
+
+    @property
+    def base_ref(self):
+        return self.gh_pr.base.ref
+
+    @property
+    def title(self):
+        return self.gh_pr.title
+
+    @property
+    def html_url(self):
+        return self.gh_pr.html_url
+
+    def create_changelog(self, changes):
+
+        # find related issue
+        issue_ref = self.CLOSES_REF_RE.findall(self.body)
+        logger.info("Issue ref -> %s" % issue_ref)
+        issues = {}
+        for issue_id in issue_ref:
+            issue = self.gh_repo.get_issue(int(issue_id))
+            issues[issue_id] = {
+                'labels': [i.name for i in issue.labels], 'url': issue.html_url
+            }
+
+        # Determine changelog type:
+        # first based on pull request labels, any label with the following syntax 'changelog/xxxxxx'
+        # e.g: changelog/breaking_changes to reference breaking changes
+        change_type = None
+        for item in self.labels:
+            m = re.match(r"^changelog/(.*)", item)
+            if m and m.group(1) in CHANGES_TYPE:
+                change_type = m.group(1)
+
+        if change_type is None and issues:
+            # Determines changelog type from issue reference into the pull request
+            for _, v in issues.items():
+                if "type/enhancement" in v["labels"]:
+                    change_type = "minor_changes"
+                elif "type/bug" in v["labels"]:
+                    change_type = "bugfixes"
+
+        change_type = change_type or "minor_changes"
+        logger.info("change type -> '%s'" % change_type)
+
+        issue_ref_text = self.html_url if not issues else " ".join([v["url"] for _, v in issues.items()])
+        logger.info("issue_ref_text -> '%s'" % issue_ref_text)
+        change_details = []
+        # link modification with plugin modified
+        for f in changes["M"]:
+            if any(f.startswith(x) for x in PLUGINS_PREFIXES):
+                m = re.match(r"^plugins/(.*?)/(.*?)\.py", f)
+                if m:
+                    plugin_name = m.group(2) if m.group(1) == "modules" else m.group(1) + "/" + m.group(2)
+                    change_details.append("{} - {} ({}).".format(
+                        plugin_name, self.title, issue_ref_text
+                    ))
+        if not change_details:
+            change_details.append("{0} ({1}).".format(self.title, issue_ref_text))
+        logger.info("change details -> %s" % change_details)
+
+        yaml_file_name = "changelogs/fragments/{}-{}.yaml".format(
+            self.pr_number, self.title.replace(" ", "-")
+        )
+        logger.info("Changelog created -> '%s'" % yaml_file_name)
+        result = {change_type: change_details}
+        with open(yaml_file_name, 'w') as fd:
+            yaml.dump(result, fd, default_flow_style=False, explicit_start=True)
+
 def main():
 
-    base_ref = os.environ.get("PR_BASE_REF") or "main"
-    logger.info("Base ref -> '%s'" % base_ref)
-    validator = ChangeLogValidator(base_ref)
+    repository_name = os.environ.get("PR_REPOSITORY")
+    pr_number = int(os.environ.get("PR_NUMBER"))
 
-    if validator.is_changelog_required():
+    gh_obj = GitHubRepo(repository_name, pr_number)
+
+    validator = ChangeLogValidator(gh_obj.base_ref, gh_obj.labels)
+
+    if not validator.is_changelog_required():
         # changelog not required
         logger.info(
             "Changelog not required as PR adds new modules and/or plugins or "\
             "contain only documentation changes."
         )
-        return 0
+        sys.exit(0)
+
     if not validator.has_changelog():
         logger.info(
             "Missing changelog fragment. This is not required only if "\
-            "PR adds new modules and plugins or contain only documentation changes."
+            "PR adds new modules and plugins or contain only documentation changes. "\
+            "Add label 'skip-changelog' to explicit skip changelog verification."
         )
-        sys.exit(1)
-
-    if not validator.has_valid_changelogs():
+        gh_obj.create_changelog(validator.changes)
+    elif not validator.has_valid_changelogs():
         sys.exit(1)
 
     sys.exit(0)
