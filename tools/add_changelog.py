@@ -30,18 +30,16 @@ class ChangeLogValidator(object):
 
     CHANGELOG_RE = re.compile(r"^changelogs/fragments/(.*)\.(yaml|yml)$")
 
-    def __init__(self, base_ref, pr_labels):
+    def __init__(self, base_ref):
 
         self.base_ref = base_ref
         self._changes = None
         self._changelogs = None
-        self._labels = pr_labels
 
     def _list_changes(self):
         cmd = "git diff origin/{0} --name-status".format(self.base_ref)
-        logger.info(cmd)
+        logger.info("list changes: %s" % cmd)
         rc, out, err = run_command(cmd)
-        logger.info(cmd)
         if rc != 0:
             raise ValueError(err)
 
@@ -50,11 +48,13 @@ class ChangeLogValidator(object):
             if len(v) == 2:
                 self._changes[v[0]].append(v[1])
 
+        logger.info("changes -> %s" % dict(self._changes))
+
     @property
     def changes(self):
         if self._changes is None:
             self._changes = defaultdict(list)
-            self._list_changes
+            self._list_changes()
         return self._changes
 
     @staticmethod
@@ -67,18 +67,15 @@ class ChangeLogValidator(object):
             self._changelogs = list(filter(self.test_changelog, self.changes))
         return self._changelogs
 
-    @property
     def has_changelog(self):
         return bool(self.changelogs)
 
     def is_changelog_required(self):
         """
             changelog is not required for pull request adding new module/plugin
-            or updating documentation or when pull request contains label 'skip-changelog'
+            or updating documentation
         """
-        if 'skip-changelog' in self._labels:
-            return True
-        
+        logger.info("check if changelog is required for this pull request")
         PLUGINS_PREFIXES = (
             "plugins/modules", "plugins/action", "plugins/inventory", "plugins/lookup", "plugins/filter",
             "plugins/connection", "plugins/become", "plugins/cache", "plugins/callback", "plugins/cliconf",
@@ -136,9 +133,9 @@ class ChangeLogValidator(object):
 
 def main():
 
-    base_ref = os.environ.get("PR_BASE_REF")
-    pr_labels = os.environ.get("PR_LABELS")
-    validator = ChangeLogValidator(base_ref, pr_labels)
+    base_ref = os.environ.get("PR_BASE_REF") or "main"
+    logger.info("Base ref -> '%s'" % base_ref)
+    validator = ChangeLogValidator(base_ref)
 
     if validator.is_changelog_required():
         # changelog not required
@@ -156,6 +153,7 @@ def main():
 
     if not validator.has_valid_changelogs():
         sys.exit(1)
+
     sys.exit(0)
 
 if __name__ == "__main__":
