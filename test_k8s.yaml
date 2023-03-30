@@ -1,0 +1,16 @@
+- hosts: localhost
+  connection: local
+
+  gather_facts: true
+
+  collections:
+    - kubernetes.core
+
+  vars:
+    ansible_python_interpreter: python3
+
+  tasks:
+    - name: ensure namespace
+      k8s:
+        kind: namespace
+        name: testing
