@@ -23,7 +23,7 @@ jobs:
         shell: bash
 
       - name: Download script
-        run: curl -O add_labels.py https://raw.githubusercontent.com/abikouo/gha_testing/main/scripts/add_labels.py
+        run: curl -o add_labels.py https://raw.githubusercontent.com/abikouo/gha_testing/main/scripts/add_labels.py
         shell: bash
 
       - name: add issue/pull request labels
