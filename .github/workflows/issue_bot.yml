@@ -1,4 +1,4 @@
-name: Say Hello World
+name: assign to me
 on:
   issues:
     types:
@@ -15,15 +15,9 @@ jobs:
       - name: Dump context
         uses: crazy-max/ghaction-dump-context@v2
 
-      - name: Display endpoint URL
-        run: echo "https://api.github.com/repos/${PR_REPOSITORY}/issues/${PR_NUMBER}/assignees"
-        env:
-          PR_NUMBER: ${{ github.event.number }}
-          PR_REPOSITORY: ${{ github.repository }}
-
       - name: assign to maintainer
         env:
-          PR_NUMBER: ${{ github.event.number }}
+          PR_NUMBER: ${{ github.event.issue.number }}
           PR_REPOSITORY: ${{ github.repository }}
         run: >-
           curl -H
