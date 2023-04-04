@@ -10,7 +10,10 @@ jobs:
   assign-to-maintainer:
     runs-on: ubuntu-latest
     steps:
-      - name: Update aws user-agent variable
-        uses: abikouo/gha_testing/.github/actions/assign_to_maintainer@main
+      - uses: probot/example-github-action@v1
         with:
-         github_token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Update aws user-agent variable
+      #   uses: abikouo/gha_testing/.github/actions/assign_to_maintainer@main
+      #   with:
+      #    github_token: ${{ secrets.GITHUB_TOKEN }}
