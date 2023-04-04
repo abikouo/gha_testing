@@ -10,6 +10,9 @@ jobs:
   assign:
     runs-on: ubuntu-latest
     steps:
+      - name: Dump context
+        uses: crazy-max/ghaction-dump-context@v2
+
       - name: Display endpoint URL
         run: echo "https://api.github.com/repos/${PR_REPOSITORY}/issues/${PR_NUMBER}/assignees"
         env:
