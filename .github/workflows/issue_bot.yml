@@ -7,24 +7,8 @@ on:
       - edited
 
 jobs:
-  assign:
+  assign-to-maintainer:
     runs-on: ubuntu-latest
     steps:
-      - name: Dump context
-        uses: crazy-max/ghaction-dump-context@v2
-
-      - name: Display endpoint URL
-        run: echo "https://api.github.com/repos/${PR_REPOSITORY}/issues/${PR_NUMBER}/assignees"
-        env:
-          PR_NUMBER: ${{ github.event.number }}
-          PR_REPOSITORY: ${{ github.repository }}
-
-      - name: assign to maintainer
-        env:
-          PR_NUMBER: ${{ github.event.issue.number }}
-        run: >-
-          curl -H
-          "Authorization: token ${{ secrets.GITHUB_TOKEN }}"
-          -X POST
-          -d '{"assignees": ["abikouo"]}'
-          https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/assignees
+      - name: Update aws user-agent variable
+        uses: abikouo/gha_testing/.github/actions/assign_to_maintainer@main
