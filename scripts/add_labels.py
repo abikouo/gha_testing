@@ -1,10 +1,15 @@
 #!/usr/bin/python
 
-import os
 import logging
-from github import Github
-from github import GithubException, UnknownObjectException
+import os
+import time
+from collections import defaultdict
+from datetime import datetime
+from typing import Any, Dict, List, Union
 
+import requests
+from github import (Github, GithubException, Issue, PullRequest, Repository,
+                    UnknownObjectException)
 
 FORMAT = "[%(asctime)s] - %(message)s"
 logging.basicConfig(format=FORMAT)
@@ -13,14 +18,16 @@ logger.setLevel(logging.DEBUG)
 
 
 NEEDS_TRIAGE_LABEL = "needs_triage"
-NEEDS_CONTRIBUTOR_LABEL = "new_contributor"
+NEW_CONTRIBUTOR_LABEL = "new_contributor"
 NEEDS_REVISION_LABEL = "needs_revision"
 WIP_LABEL = "WIP"
 NEEDS_REBASE_LABEL = "needs_rebase"
+HAS_ISSUE_LABEL = "has_issue"
+HAS_PR_LABEL = "has_pr"
 
 
 COLLECTION_LABELS = {
-	NEEDS_CONTRIBUTOR_LABEL: {
+	NEW_CONTRIBUTOR_LABEL: {
 		"color": "8aea94",
 		"description": "Help guide this first time contributor"
 	},
@@ -38,18 +45,38 @@ COLLECTION_LABELS = {
 	NEEDS_REBASE_LABEL: {
 		"color": "d9cf0b",
 		"description": "https://docs.ansible.com/ansible/devel/dev_guide/developing_rebasing.html"
+	},
+    HAS_ISSUE_LABEL: {
+		"color": "eac8fd",
+		"description": "This PR is fixing an opened issue"
+	},
+    HAS_PR_LABEL: {
+		"color": "dabfeb",
+		"description": "This issue has a fixing PR"
 	}
 }
 
-class ManageLabels(object):
+API_ACCEPTS_HEADERS = [
+    'application/json',
+    'application/vnd.github.mockingbird-preview',
+    'application/vnd.github.sailor-v-preview+json',
+    'application/vnd.github.starfox-preview+json',
+    'application/vnd.github.squirrel-girl-preview',
+    'application/vnd.github.v3+json',
+]
 
-    def __init__(self, repository, access_token, event_action):
 
-        self.client = Github(access_token)
-        self.repo = self.client.get_repo(repository)
-        self.action = event_action
+class GitHubEvent(object):
 
-    def _create_label(self, name):
+    def __init__(self, repo: Repository, issue_or_pullrequest: Union[Issue.Issue, PullRequest.PullRequest], action: str) -> None:
+        self.instance = issue_or_pullrequest
+        self.raw_data = self.instance.raw_data
+        self.submitter = self.raw_data["user"]["login"]
+        self.repo = repo
+        self.action = action
+        self.existing_labels = [label.name for label in self.instance.get_labels()]
+
+    def _create_repository_label(self, name):
         label = COLLECTION_LABELS.get(name, {})
         if label:
             try:
@@ -59,51 +86,166 @@ class ManageLabels(object):
                     raise
                 logger.info("Label '%s' already exists into repository", name)
 
-    def set_labels_to_issue(self, gh_issue):
-        """set needs_triage label (for newly opened / reopened issues and PRs)"""
-        existing_labels = [label.name for label in gh_issue.get_labels()]
-        logger.info("Existing labels: %s" % existing_labels)
-        if self.action in ('opened', 'reopened') and NEEDS_TRIAGE_LABEL not in existing_labels:
-            logger.info("add label '%s' to issue", NEEDS_TRIAGE_LABEL)
-            self._create_label(NEEDS_TRIAGE_LABEL)
-            gh_issue.set_labels(NEEDS_TRIAGE_LABEL)
+    def set_labels(self, *args: List[str]) -> None:
+        for label in args:
+            self._create_repository_label(label)
+            self.instance.set_labels(label)
 
-    def set_labels_to_pull_request(self, gh_pr):
-        """
-        - needs_triage (for newly opened / reopened issues and PRs)
-        - new_contributor (PRs where the pull_request's author_association is FIRST_TIME_CONTRIBUTOR)
-        - WIP (any time a PR's title startsWith "WIP")
-        - needs_revision (changes have been requested on the PR)
-        - needs_rebase (PR has a merge conflict that must be resolved)
-        """
+    def add_labels(self) -> None:
         pass
 
-    def _get_event(self, event_number):
-        try:
-            # try event as pull request
-            gh_pull = self.repo.get_pull(event_number)
-            return gh_pull, False
-        except UnknownObjectException:
-            gh_issue = self.repo.get_issue(event_number)
-            return gh_issue, True
 
-    def run(self, event_number):
+class GitHubPullRequest(GitHubEvent):
 
-        gh_event, is_issue = self._get_event(event_number)
-        logger.info("is event type issue: {}".format(is_issue))
+    def __init__(self, repo: Repository, pullrequest: PullRequest.PullRequest, action: str) -> None:
 
-        if is_issue:
-            self.set_labels_to_issue(gh_event)
+        super(GitHubPullRequest, self).__init__(repo, pullrequest, action)
+        self._mergeable_state_fetch = False
+
+    def _get_reviews(self) -> Dict[str, Any]:
+        endpoint_url = self.instance.url + '/reviews'
+        response = requests.get(endpoint_url, headers={"Authorization": "Bearer %s" % os.environ.get("GH_TOKEN")})
+        reviews = sorted([
+            {
+                'author': rev["user"]["login"],
+                'submitted_at': datetime.fromisoformat(rev['submitted_at'].replace("Z", "+00:00")),
+                'state': rev['state']
+            } for rev in response.json() if rev["user"]["login"] != self.submitter
+        ], key=lambda d: d['submitted_at'])
+
+        # Calculate the final review state for each reviewer
+        user_reviews = defaultdict(dict)
+        for rev in reviews:
+            author = rev["author"]
+            user_reviews[author]['state'] = rev["state"]
+            user_reviews[author]['submitted_at'] = rev["submitted_at"]
+        return user_reviews
+
+    def _get_merge_commits(self) -> List[str]:
+        merge_commits = []
+        commits = [x for x in self.instance.get_commits()]
+        headers = {
+            'Accept': ','.join(API_ACCEPTS_HEADERS),
+            'Authorization': 'Bearer %s' % os.environ.get("GH_TOKEN"),
+        }
+        for commit in commits:
+            response = requests.get(commit.url, headers=headers).json()
+            parents = response['parents']
+            message = response['commit']['message']
+            if len(parents) > 1 or message.startswith('Merge branch'):
+                merge_commits.append(commit)
+        return merge_commits
+
+    @property
+    def mergeable_state(self) -> str:
+        if not self._mergeable_state_fetch:
+            # http://stackoverflow.com/a/30620973
+            retries = 0
+            while self.instance.mergeable_state == 'unknown':
+                retries += 1
+                if retries >= 10:
+                    logger.warning(u'exceeded fetch threshold for mergeable_state')
+                    return None
+                logging.warning('re-fetch[%s] PR#%s because mergeable state is unknown' % (retries, self.instance.number))
+                time.sleep(1)
+            self._mergeable_state_fetch = True
+
+        return self.instance.mergeable_state
+
+    def needs_revision_or_rebase(self) -> Dict[str, bool]:
+        """
+            - needs_revision (changes have been requested on the PR)
+            - needs_rebase (PR has a merge conflict that must be resolved)
+        """
+        logger.info("mergeable state => %s", self.mergeable_state)
+        result = {}
+        if self.mergeable_state == 'dirty':
+            result[NEEDS_REVISION_LABEL] = True
+            result[NEEDS_REBASE_LABEL] = True
+        else:
+            user_reviews = self._get_reviews()
+            logger.info("User reviews => %s", user_reviews)
+            changed_requested_by = [author for author, review in user_reviews.items() if review["state"] == "CHANGES_REQUESTED"]
+            logger.info("Changes requested by => %s", changed_requested_by)
+            if changed_requested_by:
+                result[NEEDS_REVISION_LABEL] = True
+
+        if not result.get(NEEDS_REBASE_LABEL, False) and self._get_merge_commits():
+            # Merge commits are bad, force a rebase
+            result[NEEDS_REBASE_LABEL] = True
+
+        return result
+
+    def needs_triage(self) -> bool:
+        """needs_triage (for newly opened / reopened issues and PRs)"""
+        if self.action in ('opened', 'reopened') and NEEDS_TRIAGE_LABEL not in self.existing_labels:
+            return True
+        return False
+
+    def new_contributor(self) -> bool:
+        """new_contributor (PRs where the pull_request's author_association is FIRST_TIME_CONTRIBUTOR)"""
+        return self.raw_data.get('author_association') in ('NONE', 'FIRST_TIME_CONTRIBUTOR') and NEW_CONTRIBUTOR_LABEL not in self.existing_labels
+
+    def wip(self) -> bool:
+        """WIP (any time a PR's title startsWith "WIP")"""
+        logger.info("PR title => %s", self.instance.title)
+        return WIP_LABEL not in self.existing_labels and self.instance.title.startswith("WIP")
+
+    def add_labels(self) -> None:
+        logger.info("Existing labels => %s", self.existing_labels)
+        labels = []
+        if self.new_contributor():
+            labels.append(NEW_CONTRIBUTOR_LABEL)
+        if self.needs_triage():
+            labels.append(NEEDS_TRIAGE_LABEL)
+        if self.wip():
+            labels.append(WIP_LABEL)
+        labels += [item for item, value in self.needs_revision_or_rebase().items() if value]
+
+        logger.info("adding labels => %s", labels)
+
+
+class GitHubIssue(GitHubEvent):
+
+    def __init__(self, repo: Repository, issue: Issue.Issue, action: str) -> None:
+
+        super(GitHubPullRequest, self).__init__(repo, issue, action)
+        self._mergeable_state_fetch = False
+
+    def add_labels(self) -> None:
+        """set needs_triage label (for newly opened / reopened issues and PRs)"""
+        labels = []
+        if self.action in ('opened', 'reopened') and NEEDS_TRIAGE_LABEL not in self.existing_labels:
+            labels.append(NEEDS_TRIAGE_LABEL)
+        logger.info("adding labels => %s", labels)
+        self.set_labels(*labels)
+
+
+def run(repository: str, access_token: str, event_number: int, event_action: str) -> None:
+
+    gh_client = Github(access_token)
+    gh_repo = gh_client.get_repo(repository)
+
+    # Create instance: pull request or issue object
+    try:
+        # try event as pull request
+        pullrequest = gh_repo.get_pull(event_number)
+        instance = GitHubPullRequest(gh_repo, pullrequest, event_action)
+    except UnknownObjectException:
+        issue = gh_repo.get_issue(event_number)
+        instance = GitHubIssue(gh_repo, issue, event_action)
+
+    instance.add_labels()
+
 
 def main():
 
     access_token = os.environ.get("GH_TOKEN")
     event_repository = os.environ.get("GH_REPOSITORY")
-    event_action = os.environ.get("GH_EVENT_ACTION") # Extracted ${{ github.event.action }}
+    event_action = os.environ.get("GH_EVENT_ACTION")
     event_number = int(os.environ.get("GH_EVENT_NUMBER"))
 
-    assignator = ManageLabels(repository=event_repository, access_token=access_token, event_action=event_action)
-    assignator.run(event_number=event_number)
+    run(event_repository, access_token, event_number, event_action)
     
 if __name__ == "__main__":
     main()
