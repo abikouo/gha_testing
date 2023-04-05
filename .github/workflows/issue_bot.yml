@@ -1,4 +1,4 @@
-name: assign to me
+name: issue/pull request labelling
 on:
   issues:
     types:

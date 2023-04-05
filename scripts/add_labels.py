@@ -91,6 +91,10 @@ class GitHubEvent(object):
             self._create_repository_label(label)
             self.instance.set_labels(label)
 
+    @property
+    def closed(self) -> bool:
+        return self.raw_data["state"] == "closed"
+
     def add_labels(self) -> None:
         pass
 
@@ -209,7 +213,7 @@ class GitHubIssue(GitHubEvent):
 
     def __init__(self, repo: Repository, issue: Issue.Issue, action: str) -> None:
 
-        super(GitHubPullRequest, self).__init__(repo, issue, action)
+        super(GitHubIssue, self).__init__(repo, issue, action)
         self._mergeable_state_fetch = False
 
     def add_labels(self) -> None:
@@ -235,7 +239,8 @@ def run(repository: str, access_token: str, event_number: int, event_action: str
         issue = gh_repo.get_issue(event_number)
         instance = GitHubIssue(gh_repo, issue, event_action)
 
-    instance.add_labels()
+    if not instance.closed:
+        instance.add_labels()
 
 
 def main():
