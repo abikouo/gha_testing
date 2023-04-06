@@ -1,28 +1,13 @@
 name: ansible_bot
 on:
   workflow_call:
-  # issues:
-  #   types:
-  #     - opened
-  #     - reopened
-  #     - edited
-  # pull_request_review:
-  #   types:
-  #     - submitted
-  #     - edited
-  #     - dismissed
-  # pull_request:
-  #   types:
-  #     - opened
-  #     - edited
-  #     - reopened
-  #     - synchronize
 
 jobs:
   labelling:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+      pull-requests: write
     steps:
       - name: Set up Python
         uses: actions/setup-python@v4
