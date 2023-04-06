@@ -1,24 +1,25 @@
-name: issue/pull request labelling
+name: ansible_bot
 on:
-  issues:
-    types:
-      - opened
-      - reopened
-      - edited
-  pull_request_review:
-    types:
-      - submitted
-      - edited
-      - dismissed
-  pull_request:
-    types:
-      - opened
-      - edited
-      - reopened
-      - synchronize
+  workflow_call:
+  # issues:
+  #   types:
+  #     - opened
+  #     - reopened
+  #     - edited
+  # pull_request_review:
+  #   types:
+  #     - submitted
+  #     - edited
+  #     - dismissed
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - edited
+  #     - reopened
+  #     - synchronize
 
 jobs:
-  assign:
+  labelling:
     runs-on: ubuntu-latest
     permissions:
       issues: write
