@@ -1,0 +1,14 @@
+---
+repos:
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        entry: pytest .github scripts -vvvv
+        types: [python]
+        language: python
+        pass_filenames: false
+        always_run: true
+        additional_dependencies:
+          - pytest
+          - pygithub

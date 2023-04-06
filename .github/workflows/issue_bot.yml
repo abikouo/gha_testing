@@ -5,6 +5,17 @@ on:
       - opened
       - reopened
       - edited
+  pull_request_review:
+    types:
+      - submitted
+      - edited
+      - dismissed
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
 
 jobs:
   assign:
