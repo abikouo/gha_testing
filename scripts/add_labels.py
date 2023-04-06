@@ -80,15 +80,16 @@ class GitHubEvent(object):
         self.action = action
         self.existing_labels = [label.name for label in self.instance.get_labels()]
 
-    def _create_repository_label(self, name):
-        label = COLLECTION_LABELS.get(name, {})
-        if label:
-            try:
-                self.repo.create_label(name=name, **label)
-            except GithubException as err:
-                if err.data["errors"][0]["code"] != "already_exists":
-                    raise
-                logger.info("Label '%s' already exists into repository", name)
+    def create_labels(self, labels: List[str]) -> None:
+        for name in labels:
+            params = COLLECTION_LABELS.get(name, {})
+            if params:
+                try:
+                    self.repo.create_label(name=name, **params)
+                except GithubException as err:
+                    if err.data["errors"][0]["code"] != "already_exists":
+                        raise
+                    logger.info("Label '%s' already exists into repository", name)
 
     @staticmethod
     def merge_labels(existing_labels: List[str], *args: List[str]) -> List[str]:
@@ -108,9 +109,12 @@ class GitHubEvent(object):
         final_labels = self.merge_labels(self.existing_labels, *args)
 
         if final_labels != self.existing_labels:
-            for label in final_labels:
-                if label not in self.existing_labels:
-                    self._create_repository_label(label)
+            # create labels
+            repo_labels = [label.name for label in self.repo.get_labels()]
+            labels_to_create = [label for label in final_labels if label not in repo_labels]
+            if labels_to_create:
+                self.create_labels(labels_to_create)
+            # assign labels
             self.instance.set_labels(*final_labels)
 
     def needs_triage(self) -> bool:
