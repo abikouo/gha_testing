@@ -1,4 +1,4 @@
-name: ansible_bot
+name: bot
 on:
   workflow_call:
 
