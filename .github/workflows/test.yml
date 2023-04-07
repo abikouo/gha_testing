@@ -17,5 +17,11 @@ on:
       - '*'
 
 jobs:
-  changelog:
-    uses: abikouo/github_actions/.github/workflows/changelog.yml@test_gha_cloud
+  labelling:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test even number
+        run: echo 'event number -> $E_NUMBER'
+        env:
+          E_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+        shell: bash
