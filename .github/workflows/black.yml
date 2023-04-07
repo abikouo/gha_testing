@@ -5,7 +5,7 @@ concurrency:
 
 on:
   workflow_call:
-  # better to be called with
+  # expected to be called with
   # pull_request:
   #   types:
   #     - labeled
