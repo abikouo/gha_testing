@@ -27,7 +27,7 @@ jobs:
       - name: add issue/pull request labels
         run: python ./add_labels.py
         env:
-          GH_EVENT_NUMBER: ${{ github.event.number }}
+          GH_EVENT_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
           GH_REPOSITORY: ${{ github.repository }}
           GH_EVENT_ACTION: ${{ github.event.action }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
