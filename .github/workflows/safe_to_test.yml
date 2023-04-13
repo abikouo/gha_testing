@@ -1,0 +1,38 @@
+name: safe-to-test
+on:
+  workflow_call:
+    secrets:
+      GH_TOKEN:
+        required: true
+
+jobs:
+  confirm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Set up Python '3.9'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install python dependencies
+        run: |
+          pip install -U pygithub
+        shell: bash
+
+      - name: Download script to execute
+        run: >-
+          curl -o safe_to_test.py
+          https://raw.githubusercontent.com/abikouo/gha_testing/main/scripts/safe_to_test.py
+        shell: bash
+
+      - name: Execute script
+        run: python3 ./safe_to_test.py
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_REPOSITORY: ${{ github.repository }}
+          GH_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_EVENT_LABEL_NAME: ${{ github.event.label.name }}
+          GH_EVENT_ACTION: ${{ github.event.action }}
