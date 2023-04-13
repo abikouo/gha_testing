@@ -76,7 +76,7 @@ def main() -> None:
     if SAFE_TO_TEST_LABEL not in [label.name for label in pr_instance.get_labels()]:
         logger.info("label '%s' is missing to trigger tests", SAFE_TO_TEST_LABEL)
         pr_instance.create_issue_comment(
-            body="Please contact a maintainer to add label '%s' in order to trigger tests.", SAFE_TO_TEST_LABEL
+            body=f"Please contact a maintainer to add label '{SAFE_TO_TEST_LABEL}' in order to trigger tests."
         )
         sys.exit(1)
 
