@@ -39,9 +39,11 @@ def main() -> None:
         sys.exit(1)
 
     author = pr_instance.raw_data["user"]["login"]
-    is_collaborator = False
-    if author in [collaborator.login for collaborator in gh_repo.get_collaborators()]:
-        is_collaborator = True
+    logger.info("pull request author -> '%s'", author)
+    collaborators = [collaborator.login for collaborator in gh_repo.get_collaborators()]
+    logger.info("Repository collaborators -> '%s'", collaborators)
+    is_collaborator = author in collaborators
+    logger.info("is author a collaborator -> '%s'", is_collaborator)
 
     labels = [label.name for label in pr_instance.get_labels()]
     logger.info("Pull request labels: %s", labels)
@@ -52,11 +54,13 @@ def main() -> None:
         elif event_label_name != SAFE_TO_TEST_LABEL and event_action in ("synchronize", "reopened"):
             # Remove 'safe to test' label for non-collaborator author
             labels.remove(SAFE_TO_TEST_LABEL)
+            logger.info("Remove label '%s' from pull request", SAFE_TO_TEST_LABEL)
             pr_instance.set_labels(*labels)
     elif is_collaborator:
         # add label 'safe to test' when missing for collaborator's pull request
         # first create label into repository
         try:
+            logger.info("Create label on repository '%s'", SAFE_TO_TEST_LABEL)
             gh_repo.create_label(name=SAFE_TO_TEST_LABEL, color=SAFE_TO_TEST_LABEL_COLOR)
         except GithubException as err:
             if err.data.get("errors", [{}])[0].get("code") != "already_exists":
@@ -64,13 +68,19 @@ def main() -> None:
             logger.info("Label '%s' already exists into repository", SAFE_TO_TEST_LABEL)
         # update pull request labels
         labels.append(SAFE_TO_TEST_LABEL)
+        logger.info("Add label '%s' to pull request", SAFE_TO_TEST_LABEL)
         pr_instance.set_labels(*labels)
 
     # check pull request labels
     pr_instance = gh_repo.get_pull(pr_number)
     if SAFE_TO_TEST_LABEL not in [label.name for label in pr_instance.get_labels()]:
-        logger.info("Please contact a maintainer to add label '%s' in order to trigger tests.", SAFE_TO_TEST_LABEL)
+        logger.info("label '%s' is missing to trigger tests", SAFE_TO_TEST_LABEL)
+        pr_instance.create_issue_comment(
+            body="Please contact a maintainer to add label '%s' in order to trigger tests.", SAFE_TO_TEST_LABEL
+        )
         sys.exit(1)
+
+    logger.info("Pull request contains label '%s'", SAFE_TO_TEST_LABEL)
 
 
 if __name__ == "__main__":
