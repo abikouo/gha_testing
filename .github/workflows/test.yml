@@ -19,3 +19,6 @@ on:
 jobs:
   changelog:
     uses: abikouo/github_actions/.github/workflows/changelog.yml@test_gha_cloud
+  safe-to-test:
+    uses: abikouo/gha_testing/.github/workflows/safe-to-test.yml@main
+   
