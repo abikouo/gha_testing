@@ -8,6 +8,7 @@ from github import Github, GithubException
 import logging
 import os
 import sys
+import requests
 
 
 FORMAT = "[%(asctime)s] - %(message)s"
@@ -18,6 +19,14 @@ logger.setLevel(logging.DEBUG)
 
 SAFE_TO_TEST_LABEL = "safe to test"
 SAFE_TO_TEST_LABEL_COLOR = "8aea94"
+
+
+def is_author_collaborator(repository: str, user_login: str) -> bool:
+    headers = {
+        "Authorization": "Bearer %s" % os.environ.get("GH_TOKEN"),
+    }
+    response = requests.get(f"https://api.github.com/repos/{repository}/collaborators/{user_login}", headers=headers)
+    return response.status_code == 204
 
 
 def main() -> None:
@@ -40,9 +49,7 @@ def main() -> None:
 
     author = pr_instance.raw_data["user"]["login"]
     logger.info("pull request author -> '%s'", author)
-    collaborators = [collaborator.login for collaborator in gh_repo.get_collaborators()]
-    logger.info("Repository collaborators -> '%s'", collaborators)
-    is_collaborator = author in collaborators
+    is_collaborator = is_author_collaborator(repository, author)
     logger.info("is author a collaborator -> '%s'", is_collaborator)
 
     labels = [label.name for label in pr_instance.get_labels()]

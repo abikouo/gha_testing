@@ -14,15 +14,9 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: check if the PR author is a collaborator
-        run: 'gh api -H "Accept: application/vnd.github.v3+json" $API_URL'
-        env:
-          API_URL: /repos/${{ github.repository }}/collaborators/${{ github.event.pull_request.user.login }}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
       - name: Install python dependencies
         run: |
-          pip install -U pygithub
+          pip install -U pygithub requests
         shell: bash
 
       - name: Download script to execute
