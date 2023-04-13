@@ -18,6 +18,8 @@ on:
 
 jobs:
   safe-to-test:
+    permissions:
+      contents: write
     uses: abikouo/gha_testing/.github/workflows/safe-to-test.yml@main
     secrets:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
