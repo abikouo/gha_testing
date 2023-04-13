@@ -4,7 +4,7 @@
    the pull request
 """
 
-from github import Github, Repository, GithubException
+from github import Github, GithubException
 import logging
 import os
 import sys
