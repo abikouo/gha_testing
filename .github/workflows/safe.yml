@@ -19,6 +19,7 @@ on:
 jobs:
   safe-to-test:
     permissions:
+      pull-requests: write
       contents: write
     uses: abikouo/gha_testing/.github/workflows/safe-to-test.yml@main
     secrets:
