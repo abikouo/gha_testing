@@ -8,8 +8,6 @@ on:
 jobs:
   confirm:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Set up Python '3.9'
         uses: actions/setup-python@v4
