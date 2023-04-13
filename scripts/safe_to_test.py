@@ -59,7 +59,7 @@ def main() -> None:
         try:
             gh_repo.create_label(name=SAFE_TO_TEST_LABEL, color=SAFE_TO_TEST_LABEL_COLOR)
         except GithubException as err:
-            if err.data.get("errors", [{}]).get("code") != "already_exists":
+            if err.data.get("errors", [{}])[0].get("code") != "already_exists":
                 raise
             logger.info("Label '%s' already exists into repository", SAFE_TO_TEST_LABEL)
         # update pull request labels
