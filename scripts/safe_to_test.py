@@ -38,11 +38,9 @@ def main() -> None:
         logger.error("failed to get pull request [%s#%d] info -> %s" % (repository, pr_number, err))
         sys.exit(1)
 
-    author = pr_instance.raw_data["user"]["login"]
-    logger.info("pull request author -> '%s'", author)
-    collaborators = [collaborator.login for collaborator in gh_repo.get_collaborators()]
-    logger.info("Repository collaborators -> '%s'", collaborators)
-    is_collaborator = author in collaborators
+    author_association = pr_instance.raw_data['author_association']
+    logger.info("author association => %s", author_association)
+    is_collaborator = author_association in ("MEMBER", "OWNER", "COLLABORATOR")
     logger.info("is author a collaborator -> '%s'", is_collaborator)
 
     labels = [label.name for label in pr_instance.get_labels()]

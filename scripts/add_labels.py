@@ -231,7 +231,7 @@ class GitHubPullRequest(GitHubEvent):
 
     def new_contributor(self) -> bool:
         """new_contributor (PRs where the pull_request's author_association is FIRST_TIME_CONTRIBUTOR)"""
-        return self.raw_data.get("author_association") in ("NONE", "FIRST_TIME_CONTRIBUTOR")
+        return self.raw_data.get("author_association") in ("NONE", "FIRST_TIME_CONTRIBUTOR", "FIRST_TIMER")
 
     def wip(self) -> bool:
         """WIP (any time a PR's title startsWith "WIP")"""
