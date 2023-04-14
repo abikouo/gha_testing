@@ -39,7 +39,7 @@ def main() -> None:
         sys.exit(1)
 
     author = pr_instance.raw_data["user"]["login"]
-    collaborators = (collaborator.login for collaborator in gh_repo.get_collaborators())
+    collaborators = [collaborator.login for collaborator in gh_repo.get_collaborators()]
     logger.info("collaborators => %s", collaborators)
     is_collaborator = author in collaborators
     logger.info("is author a collaborator -> '%s'", is_collaborator)
