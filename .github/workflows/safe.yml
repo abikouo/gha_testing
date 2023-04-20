@@ -1,15 +1,11 @@
 ---
-name: safe-to-test
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+name: CI
 
 on:
   pull_request:
 
 jobs:
-  test_var_setting:
+  var_set:
     runs-on: ubuntu-latest
     name: set variable
     steps:
