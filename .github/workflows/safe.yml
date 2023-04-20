@@ -6,22 +6,45 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  pull_request_target:
-    types:
-      - opened
-      - reopened
-      - labeled
-      - unlabeled
-      - synchronize
-    branches:
-      - '*'
+  pull_request:
 
 jobs:
-  safe-to-test:
-    permissions:
-      pull-requests: write
-      contents: write
-    uses: abikouo/gha_testing/.github/workflows/safe-to-test.yml@main
-    secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-   
+  test_var_setting:
+    runs-on: ubuntu-latest
+    name: set variable
+    steps:
+      - name: set variable when command separated
+        id: test1
+        run: |
+          set -eux
+          RES=""
+          for var in $(echo $COMPOSE | tr ' ' '\n'); do
+            RES="-c ${var} ${RES}"
+          done
+          echo "test=${RES}" >> $GITHUB_OUTPUT
+        shell: bash
+        env:
+          COMPOSE: 'requirements.txt test-requirements.txt'
+
+      - name: set variable when command separated
+        id: test2
+        run: |
+          set -eux
+          RES=""
+          for var in $(echo $COMPOSE | tr ' ' '\n'); do
+            RES="-c ${var} ${RES}"
+          done
+          echo "test=${RES}" >> $GITHUB_OUTPUT
+        shell: bash
+        env:
+          COMPOSE: |
+            requirements.txt
+            test-requirements.txt
+      
+      - name: read environment variable from test1
+        run: echo "${{ steps.test1.outputs.test }}"
+        shell: bash
+      
+      - name: read environment variable from test2
+        run: echo "${{ steps.test2.outputs.test }}"
+        shell: bash
