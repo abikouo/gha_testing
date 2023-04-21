@@ -14,8 +14,8 @@ jobs:
     steps:
       - name: Parse attribute
         id: parse-id
-        run: 
-          python -c "import os; splitter={x.split(':', maxsplit=1)[0]:x.split(':', maxsplit=1)[1] for x in os.environ.get('AWS_SPLITTER').split(';')}; context=os.environ.get('AWS_CONTEXT'); print(splitter.get(context, '').replace(',', ' '))"
+        run: |
+          python -c "import os; splitter={x.split(':', maxsplit=1)[0]:x.split(':', maxsplit=1)[1] for x in os.environ.get('AWS_SPLITTER').split(';')}; context=os.environ.get('AWS_CONTEXT'); print('ansible_test_targets=', splitter.get(context, '').replace(',', ' '))" >> $GITHUB_OUTPUT
         shell: bash
         env:
           AWS_CONTEXT: amazon.aws-2
