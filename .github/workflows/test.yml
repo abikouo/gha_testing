@@ -7,16 +7,24 @@ concurrency:
 
 on:
   pull_request:
-    types:
-      - opened
-      - reopened
-      - labeled
-      - unlabeled
-      - synchronize
-    branches:
-      - '*'
 
 jobs:
-  changelog:
-    uses: abikouo/github_actions/.github/workflows/changelog.yml@test_gha_cloud
-   
+  read-splitter-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse attribute
+        id: parse-id
+        run: |
+          set -eux
+          ansible_targets=$(echo "${AWS_SPLITTER}" | tr ';' '\n' | grep "${AWS_CONTEXT}" | cut -d ':' -f2 | tr ',' ' ')
+          echo "ansible_test_targets=${ansible_targets}" >> $GITHUB_OUTPUT
+        shell: bash
+        env:
+          AWS_CONTEXT: amazon.aws-2
+          AWS_SPLITTER: "amazon.aws-1:ec2_security_group;amazon.aws-2:autoscaling_group,ec2_instance_external_resource_attach,ec2_vpc_subnet,lookup_secretsmanager_secret;amazon.aws-3:ec2_ami_instance,ec2_instance_cpu_options,iam_policy,lookup_ssm_parameter;amazon.aws-4:ec2_instance_instance_multiple,ec2_instance_ebs_optimized,iam_user,module_utils_waiter;amazon.aws-5:elb_classic_lb,ec2_instance_instance_no_wait,lambda;amazon.aws-6:rds_instance_states,ec2_instance_state_config_updates,lambda_alias;amazon.aws-7:rds_instance_aurora,ec2_instance_instance_minimal,lambda_event;amazon.aws-8:rds_instance_snapshot_mgmt,ec2_instance_hibernation_options,lambda_layer;amazon.aws-9:rds_instance_replica,kms_key,ec2_tag,module_utils_botocore_recorder;amazon.aws-10:rds_instance_snapshot,rds_cluster_snapshot,ec2_vpc_dhcp_option,module_utils_core;amazon.aws-11:rds_cluster_create,ec2_instance_iam_instance_role,ec2_instance_tags_and_vpc_settings,lambda_policy;amazon.aws-12:rds_cluster_restore,ec2_instance_default_vpc_tests,ec2_instance_termination_protection,rds_option_group;amazon.aws-13:rds_cluster_tag,ec2_metadata_facts,ec2_instance_metadata_options,rds_param_group;amazon.aws-14:rds_cluster_modify,ec2_vol,ec2_instance_uptime,rds_subnet_group;amazon.aws-15:rds_cluster_create_sgs,ec2_vpc_nat_gateway,aws_az_info,cloudwatchlogs,route53;amazon.aws-16:rds_instance_restore,elb_application_lb,aws_caller_info,ec2_eip,route53_health_check;amazon.aws-17:ec2_snapshot,rds_instance_tagging,cloudformation,ec2_eni,route53_zone;amazon.aws-18:ec2_vpc_route_table,rds_instance_complex,cloudtrail,ec2_key,s3_bucket;amazon.aws-19:rds_instance_modify,ec2_ami_snapshot,inventory_aws_ec2,ec2_vpc_endpoint_service_info,lookup_aws_account_attribute;amazon.aws-20:rds_instance_sgroups,ec2_ami_tpm,inventory_aws_rds,ec2_vpc_igw,lookup_aws_collection_constants;amazon.aws-21:rds_instance_processor,ec2_instance_block_devices,ec2_vpc_endpoint,cloudwatchevent_rule,ec2_vpc_net,lookup_aws_service_ip_ranges;amazon.aws-22:rds_instance_upgrade,ec2_instance_checkmode_tests,ec2_instance_security_group,cloudwatch_metric_alarm,ec2_spot_instance,s3_object"
+
+      - name: Display selected value
+        run: echo "ansible test targets => [${ANSIBLE_TEST_TARGETS}]"
+        shell: bash
+        env:
+          ANSIBLE_TEST_TARGETS: ${{ steps.parse-id.outputs.ansible_test_targets }}
