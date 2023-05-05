@@ -29,8 +29,7 @@ jobs:
           path: ${{ env.source }}
           ref: main
 
-      - name: Build and install collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+      - name: Build collection
+        uses: abikouo/github_actions/.github/actions/build_collection@build_install_collection
         with:
-          install_python_dependencies: true
           source_path: ${{ env.source }}
