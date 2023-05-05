@@ -27,12 +27,10 @@ jobs:
         with:
           repository: ansible-collections/cloud.terraform
           path: ${{ env.source }}
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: main
 
       - name: Build and install collection
-        id: install-collection
-        uses: abikouo/github_actions/.github/actions/build_install_collection@build_install_collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
           source_path: ${{ env.source }}
-   
