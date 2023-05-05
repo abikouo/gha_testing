@@ -29,14 +29,22 @@ jobs:
           path: ${{ env.source }}
           ref: main
 
+      - name: Read collection metadata from galaxy.yml
+        id: identify
+        uses: ansible-network/github_actions/.github/actions/identify_collection@main
+        with:
+          source_path: ${{ env.source }}
+
       - name: Build collection
         id: build
         uses: abikouo/github_actions/.github/actions/build_install_collection@build_install_v2
         with:
           source_path: ${{ env.source }}
           install_python_dependencies: "true"
+          collection_path: ${{ steps.identify.outputs.collection_path }}
+          tar_file: ${{ steps.identify.outputs.tar_file }}
 
       - name: Display collection final path
         run:
-          echo "final collection install path => [${{ steps.build.outputs.collection_path }}]"
+          echo "Final collection install path => [${{ steps.build.outputs.collection_path }}]"
         shell: bash
