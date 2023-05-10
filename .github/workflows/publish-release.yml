@@ -11,7 +11,12 @@ on:
       - stable-*
 
 jobs:
-  publish:
-    permissions:
-      contents: write
-    uses: abikouo/github_actions/.github/workflows/create_tag_from_galaxy.yml@release_v1
+  dump_context:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump context
+        uses: crazy-max/ghaction-dump-context@v2
+  # publish:
+  #   permissions:
+  #     contents: write
+  #   uses: abikouo/github_actions/.github/workflows/create_tag_from_galaxy.yml@release_v1
