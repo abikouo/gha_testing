@@ -16,4 +16,10 @@ jobs:
   publish:
     permissions:
       contents: write
-    uses: abikouo/github_actions/.github/workflows/create_tag_from_galaxy.yml@release_v1
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display context
+        run: echo "Pull request status -> $PR_STATE"
+        env:
+          PR_STATE: ${{ github.event.pull_request.merged }}
