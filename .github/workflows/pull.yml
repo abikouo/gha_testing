@@ -1,6 +1,6 @@
 name: pull_request
 concurrency:
-  group: ${{ github.head_ref }}
+  group: '${{ github.workflow }} @ ${{ github.sha }}'
   cancel-in-progress: true
 
 on:
