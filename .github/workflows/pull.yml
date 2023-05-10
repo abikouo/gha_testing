@@ -29,7 +29,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          path: ${{ env.source_path }}
+          path: ${{ env.source_dir }}
           commit-message: "Release 1.0.0"
           base: "stable-1.0"
           branch: "prepare_release_100"
