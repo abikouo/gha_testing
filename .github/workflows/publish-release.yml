@@ -12,7 +12,7 @@ on:
       - stable-*
 
 jobs:
-  publish:
+  tag:
     permissions:
       contents: write
     uses: abikouo/github_actions/.github/workflows/create_tag_from_galaxy.yml@release_v1
