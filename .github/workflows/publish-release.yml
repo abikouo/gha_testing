@@ -1,0 +1,18 @@
+---
+name: Release
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.sha }}'
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - stable-*
+
+jobs:
+  publish:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: abikouo/github_actions/.github/workflows/create_tag_from_galaxy.yml@release_v1
