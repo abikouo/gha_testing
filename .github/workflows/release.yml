@@ -14,8 +14,9 @@ on:
       - opened
       - edited
       - closed
-  pull_request_target:
 
 jobs:
   release:
+    permissions:
+      contents: write
     uses: abikouo/github_actions/.github/workflows/release.yml@release_v1
