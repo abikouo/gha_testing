@@ -14,5 +14,4 @@ jobs:
   publish:
     permissions:
       contents: write
-      pull-requests: write
     uses: abikouo/github_actions/.github/workflows/create_tag_from_galaxy.yml@release_v1
