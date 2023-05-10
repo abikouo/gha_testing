@@ -32,6 +32,6 @@ jobs:
           path: ${{ env.source_dir }}
           commit-message: "Release 1.0.0"
           base: "stable-1.0"
-          branch: "prepare_release_100"
+          branch: "prepare_release_1.0.0"
           title: "Prepare release 1.0.0"
           body: "Release 1.0.0"
