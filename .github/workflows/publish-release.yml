@@ -8,8 +8,7 @@ concurrency:
 on:
   pull_request:
     types: [closed]
-    branches:
-      - stable-*
+    branches: [stable-*]
 
 jobs:
   tag:
