@@ -6,18 +6,11 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  issues:
-    types:
-      - reopened
-      - labeled
-      - unlabeled
-      - opened
-      - edited
-      - closed
+  workflow_dispatch:
 
 jobs:
   branch:
     permissions:
       contents: write
       pull-requests: write
-    uses: abikouo/github_actions/.github/workflows/release-branch.yml@release_v1
+    uses: abikouo/github_actions/.github/workflows/release-branch.yml@release_v2
