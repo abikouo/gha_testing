@@ -1,0 +1,46 @@
+---
+name: Create
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.sha }}'
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: The name of the tag to create
+        required: true
+        type: string
+      commit_sha:
+        description: The commit sha to create tag from.
+        required: true
+        type: string
+
+jobs:
+  tag:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python '3.9'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install python dependencies
+        run: |
+          pip install pygithub
+        shell: bash
+
+      - name: create tag
+        run: >-
+          python3 tools/create_tag.py
+          -r ${{ github.repository }}
+          -c ${{ github.event.inputs.commit_sha }}
+          -t ${{ github.event.inputs.tag_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
