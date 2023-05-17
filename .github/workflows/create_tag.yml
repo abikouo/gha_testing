@@ -33,3 +33,18 @@ jobs:
         run: |
           git tag ${{ inputs.tag_name }}
           git push origin ${{ inputs.tag_name }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ inputs.tag_name }}
+          release_name: "${{ github.repository }} ${{ github.ref }}"
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: false
+          prerelease: false
