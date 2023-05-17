@@ -29,6 +29,7 @@ def main() -> None:
     tag = args.tag
     commit_sha = args.commit_sha
 
+    logger.info("access token -> '%s'", access_token)
     logger.info("Release tag -> '%s'", tag)
     logger.info("Repository -> '%s'", repository)
     logger.info("Commit sha -> '%s'", commit_sha)
