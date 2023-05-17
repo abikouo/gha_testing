@@ -13,26 +13,10 @@ on:
       - stable-*
 
 jobs:
-  dump:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Dump context
-        uses: crazy-max/ghaction-dump-context@v2
-  # tag:
-  #   permissions:
-  #     contents: write
-  #     pull-requests: write
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: 'checkout fork repository on ${{ github.head_ref }}'
-  #       uses: actions/checkout@v3
-  #       with:
-  #         repository: ${{ github.event.pull_request.head.repo.full_name }}
-  #         ref: ${{ github.head_ref }}
-  #         fetch-depth: "0"
-    # uses: abikouo/github_actions/.github/workflows/release-tag.yml@release_v2
-    # with:
-    #   branch_name:
-    #   release_publish: true
-    # secrets:
-    #   gh_token: ${{ secrets.GH_TOKEN }}
+  tag:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: abikouo/github_actions/.github/workflows/release-tag.yml@release_v2
+    secrets:
+      gh_token: ${{ secrets.GH_TOKEN }}
