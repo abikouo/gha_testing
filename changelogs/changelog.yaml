@@ -1,0 +1,18 @@
+ancestor: null
+releases:
+  0.1.0:
+    changes:
+      bugfixes:
+      - helm - delete temporary file created when deploying chart with option release_values
+        set (https://github.com/ansible-collections/kubernetes.core/issues/530).
+      - k8s_scale - clean handling of ResourceTimeout exception (https://github.com/ansible-collections/kubernetes.core/issues/583).
+      minor_changes:
+      - helm - add reuse_values and reset_values support to helm module (https://github.com/ansible-collections/kubernetes.core/issues/394).
+      - k8s - add new option delete_all to support deletion of all resources when
+        state is set to absent. (https://github.com/ansible-collections/kubernetes.core/issues/504)
+    fragments:
+    - 517-k8s-make-name-optional.yaml
+    - 575-helm-add-support-for-reuse_values-and-reset_values.yml
+    - 583-k8s_scale-clean-handling-of-ResourceTimeout-exception.yaml
+    - helm-delete-temporary-file-created-when-using-option-release_values.yaml
+    release_date: '2023-05-17'
