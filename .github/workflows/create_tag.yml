@@ -43,4 +43,4 @@ jobs:
           -c ${{ github.event.inputs.commit_sha }}
           -t ${{ github.event.inputs.tag_name }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
