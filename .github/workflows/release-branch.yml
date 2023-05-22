@@ -11,10 +11,6 @@ on:
       tag:
         description: The release tag
         required: true
-      branch:
-        description: The branch to release
-        required: false
-        default: main
 
 jobs:
   prepare:
