@@ -8,9 +8,13 @@ concurrency:
 on:
   workflow_dispatch:
     inputs:
-      release_branch:
-        description: The release base branch
+      tag:
+        description: The release tag
         required: true
+      branch:
+        description: The branch to release
+        required: false
+        default: main
 
 jobs:
   prepare:
@@ -19,4 +23,5 @@ jobs:
       pull-requests: write
     uses: ansible-network/github_actions/.github/workflows/release-branch.yml@main
     with:
-      release_branch: ${{ github.event.inputs.release_branch }}
+      tag: ${{ github.event.inputs.tag }}
+      branch: ${{ github.event.inputs.branch }}
