@@ -11,6 +11,10 @@ on:
       tag:
         description: The release tag to create.
         required: true
+      branch:
+        description: The release branch to create tag from.
+        required: false
+        default: main
 
 jobs:
   branch:
