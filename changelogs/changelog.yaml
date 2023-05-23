@@ -16,3 +16,5 @@ releases:
     - 583-k8s_scale-clean-handling-of-ResourceTimeout-exception.yaml
     - helm-delete-temporary-file-created-when-using-option-release_values.yaml
     release_date: '2023-05-23'
+  1.0.3:
+    release_date: '2023-05-23'
