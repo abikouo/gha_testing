@@ -18,8 +18,10 @@ jobs:
           set -eux
           git branch -r
           RELEASE_BRANCH="stable-0"
-          if [ `git show-ref --quiet "$RELEASE_BRANCH" 2>/dev/null` ]; then
-            echo "The release branch [$RELEASE_BRANCH'] already exists"
+          BRANCH_EXISTS="1"
+          git checkout $RELEASE_BRANCH || git checkout main && git checkout -b $RELEASE_BRANCH & BRANCH_EXISTS="0"
+          if [ "$BRANCH_EXISTS" == "1" ]; then
+            echo "The branch ${RELEASE_BRANCH} exists"
             exit 0
           fi
         shell: bash
