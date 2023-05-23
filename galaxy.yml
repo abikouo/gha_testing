@@ -1,4 +1,3 @@
----
 authors:
   - abikouo (https://github.com/abikouo)
 description: Collection to test Ansible cloud Github actions.
@@ -14,6 +13,6 @@ tags:
   - CI
   - github
   - actions
-version: 0.1.0
+version: 0.6.0
 build_ignore:
   - '*.tar.gz'
