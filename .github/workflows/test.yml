@@ -17,7 +17,7 @@ jobs:
         run: |
           set -eux
           git branch -r
-          RELEASE_BRANCH="stable-$(echo ${RELEASE_VERSION} | cut -d '.' -f1)"
+          RELEASE_BRANCH="stable-0"
           if [ `git show-ref --quiet "$RELEASE_BRANCH" 2>/dev/null` ]; then
             echo "The release branch [$RELEASE_BRANCH'] already exists"
             exit 0
