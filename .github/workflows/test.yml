@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  pull_request:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: "0"
+
+      - name: Create release branch on Github repository
+        id: create-branch
+        run: |
+          set -eux
+          git branch -r
+          RELEASE_BRANCH="stable-$(echo ${RELEASE_VERSION} | cut -d '.' -f1)"
+          if [ `git show-ref --quiet "$RELEASE_BRANCH" 2>/dev/null` ]; then
+            echo "The release branch [$RELEASE_BRANCH'] already exists"
+            exit 0
+          fi
+        shell: bash
