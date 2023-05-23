@@ -15,7 +15,6 @@ jobs:
       - name: Create release branch on Github repository
         id: create-branch
         run: |
-          set -eux
           git branch -r
           RELEASE_BRANCH="stable-0"
           BRANCH_EXISTS="1"
