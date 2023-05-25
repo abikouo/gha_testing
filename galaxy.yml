@@ -6,7 +6,7 @@ homepage: ''
 issues: https://github.com/abikouo/gha_testing/issues
 license_file: ''
 namespace: abikouo
-name: gha_testing
+name: gha
 readme: ''
 repository: https://github.com/abikouo/gha_testing
 tags:
