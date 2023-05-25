@@ -12,6 +12,10 @@ on:
         description: The target branch
         required: true
         type: string
+      value:
+        description: The value to commit
+        required: true
+        type: string
 
 jobs:
   version:
@@ -28,13 +32,13 @@ jobs:
           fetch-depth: "0"
 
       - name: Update file content
-        run: echo "${{ inputs.branch }}" >> release.txt
+        run: echo "${{ inputs.value }}" >> release.txt
         shell: bash
-      
+
       - name: Commit and push changes
         run: |
           git add release.txt
-          git -c user.name="$GIT_USER_NAME" -c user.email="$GIT_USER_EMAIL" commit -m "Pushing update for branch ${{ inputs.branch }}" --author="$GIT_AUTHOR"
+          git -c user.name="$GIT_USER_NAME" -c user.email="$GIT_USER_EMAIL" commit -m "Pushing update for branch ${{ inputs.value }}" --author="$GIT_AUTHOR"
           git push origin ${{ inputs.branch }}
         shell: bash
         env:
