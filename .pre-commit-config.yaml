@@ -1,14 +1,7 @@
 ---
 repos:
-  - repo: local
+  - repo: https://github.com/abikouo/aws_updates
+    rev: 0.1.0
     hooks:
-      - id: pytest-check
-        name: pytest-check
-        entry: pytest .github scripts -vvvv
-        types: [python]
-        language: python
-        pass_filenames: false
-        always_run: true
-        additional_dependencies:
-          - pytest
-          - pygithub
+      - id: update-aws-user-agent
+      - id: update-aws-boto-constraints
