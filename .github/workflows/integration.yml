@@ -1,0 +1,19 @@
+name: Integration
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository checkout
+        uses: actions/checkout@v3
+
+      - name: display collection version
+        run: |
+          cat plugins/module.py
+        shell: bash
