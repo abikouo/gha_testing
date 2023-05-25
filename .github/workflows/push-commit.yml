@@ -12,10 +12,6 @@ on:
         description: The target branch
         required: true
         type: string
-      value:
-        description: The value to set
-        required: true
-        type: string
 
 jobs:
   version:
@@ -37,7 +33,7 @@ jobs:
       - name: Commit and push changes
         run: |
           git add release.txt
-          git -c user.name="$GIT_USER_NAME" -c user.email="$GIT_USER_EMAIL" commit -m "${{ inputs.commit_message }}" --author="$GIT_AUTHOR"
+          git -c user.name="$GIT_USER_NAME" -c user.email="$GIT_USER_EMAIL" commit -m "Pushing update for branch ${{ inputs.branch }}" --author="$GIT_AUTHOR"
           git push origin ${{ inputs.branch }}
         shell: bash
         env:
