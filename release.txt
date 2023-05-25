@@ -1,1 +1,2 @@
 prepare_release_0.6.0
+tested from core
