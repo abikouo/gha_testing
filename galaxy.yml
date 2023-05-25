@@ -13,6 +13,6 @@ tags:
   - CI
   - github
   - actions
-version: 0.1.0
+version: 2.1.0
 build_ignore:
   - '*.tar.gz'
