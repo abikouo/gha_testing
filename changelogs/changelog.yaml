@@ -1,5 +1,38 @@
 ancestor: null
 releases:
+  0.6.0:
+    changes:
+      breaking_changes:
+      - module_utils - ``module_utils.urls`` was previously deprecated and has been
+        removed ().
+      bugfixes:
+      - aws_ec2 inventory plugin - fix ``NoRegionError`` when no regions are provided
+        and region isn't specified (https://github.com/ansible-collections/amazon.aws/issues/1551).
+      - elb_application_lb - fix missing attributes on creation of ALB. The ``create_or_update_alb()``
+        was including ALB-specific attributes when updating an existing ALB but not
+        when creating a new ALB (https://github.com/ansible-collections/amazon.aws/issues/1510).
+      - rds_instance - add support for CACertificateIdentifier to create/update rds
+        instance (https://github.com/ansible-collections/amazon.aws/pull/1459)."
+      - s3_bucket - fixes issue when deleting a bucket with unversioned objects (https://github.com/ansible-collections/amazon.aws/issues/1533).
+      - s3_object - fixes regression related to objects with a leading ``/`` (https://github.com/ansible-collections/amazon.aws/issues/1548).
+      deprecated_features:
+      - s3_object - support for passing object keys with a leading ``/`` has been
+        deprecated and will be removed in a release after 2025-12-01 (https://github.com/ansible-collections/amazon.aws/pull/1549).
+      minor_changes:
+      - ec2_snapshot - Add support for modifying createVolumePermission (https://github.com/ansible-collections/amazon.aws/pull/1464).
+      - ec2_snapshot_info - Add createVolumePermission to output result (https://github.com/ansible-collections/amazon.aws/pull/1464).
+    fragments:
+    - 1459-rds_instance-add-support-for-ca_certificate_identifier-to-create-update-instance.yml
+    - 1464-ec2_snapshot-ec2_snapshot_info-support-modifying-create-volume-permissions.yml
+    - 1510-elb_application_lb-fix-alb-specific-attributes-not-added-on-create.yml
+    - 1538-s3-null.yml
+    - 1548-s3_object-leading-slash-deprecate.yml
+    - 1548-s3_object-leading-slash.yml
+    - 1551-ec2_inventory-no-region.yml
+    - 7.0.0-urls.yml
+    - add-pytest-ansible.yml
+    - test-reqs.yml
+    release_date: '2023-05-25'
   1.0.1:
     changes:
       bugfixes:
