@@ -1,7 +1,0 @@
----
-repos:
-  - repo: https://github.com/abikouo/aws_updates
-    rev: 0.1.0
-    hooks:
-      - id: update-aws-user-agent
-      - id: update-aws-boto-constraints
