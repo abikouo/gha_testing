@@ -1,5 +1,5 @@
 ---
-name: Release
+name: Release collection
 
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.sha }}'
