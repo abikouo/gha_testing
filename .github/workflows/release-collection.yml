@@ -15,7 +15,7 @@ on:
         description: "The version to release. e.g: '5.0.1'"
         required: true
       token:
-        description: "The version to release. e.g: '5.0.1'"
+        description: "The Github token to use"
         required: true
       
 
@@ -40,18 +40,23 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.version }}
 
+      - name: Define branches
+        run: |
+          echo "STABLE_BRANCH='stable-$(echo $RELEASE_VERSION | cut -d '.' -f1)'" >> $GITHUB_ENV
+          echo "DEFAULT_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH='release-${RELEASE_VERSION}'" >> $GITHUB_ENV
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+
       - name: Create release branch on Github repository
         id: create-branch
         run: |
-          R_BRANCH="stable-$(echo ${RELEASE_VERSION} | cut -d '.' -f1)"
-          D_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
-          echo "release_branch=$R_BRANCH" >> $GITHUB_OUTPUT
-          git checkout $D_BRANCH
-          git checkout -b $R_BRANCH && git push origin $R_BRANCH || git checkout $R_BRANCH
+          git checkout ${{ env.DEFAULT_BRANCH }}
+          git checkout -b ${{ ENV.STABLE_BRANCH }} && git push origin ${{ ENV.STABLE_BRANCH }} || git checkout ${{ ENV.STABLE_BRANCH }}
         shell: bash
         env:
           GITHUB_TOKEN: ${{ inputs.token }}
-          RELEASE_VERSION: ${{ inputs.version }}
 
       - name: setup python
         uses: actions/setup-python@v4
@@ -76,12 +81,12 @@ jobs:
 
       - name: Create PR for changelog
         run: |
+          git checkout -b ${{ env.RELEASE_BRANCH }}
           git config user.name "Ansible Bot"
           git config user.email devtools@ansible.com
           git add -A
           git commit -m "Release ${{ inputs.version }}"
           git push origin ${{ env.RELEASE_BRANCH }}
+          gh pr create --title "Release ${{ inputs.version }}" --body "Automatic changes for Release ${{ inputs.version }}" --base ${{ env.STABLE_BRANCH }}
         env:
-          RELEASE_BRANCH: "${{ steps.create-branch.outputs.release_branch }}"
           GITHUB_TOKEN: ${{ inputs.token }}
-          BRANCH_NAME: chore-${{ github.workflow }}-${{ github.run_number }}
