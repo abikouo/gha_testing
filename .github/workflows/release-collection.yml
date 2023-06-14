@@ -14,18 +14,14 @@ on:
       version:
         description: "The version to release. e.g: '5.0.1'"
         required: true
-    secrets:
-      GH_TOKEN:
-        description: "The Github token to use."
+      token:
+        description: "The version to release. e.g: '5.0.1'"
         required: true
       
 
 jobs:
   create:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout the repository
@@ -33,6 +29,7 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
           fetch-depth: "0"
+          token: "${{ inputs.token }}"
 
       - name: Validate version format
         run: |-
@@ -53,7 +50,7 @@ jobs:
           git checkout -b $R_BRANCH && git push origin $R_BRANCH || git checkout $R_BRANCH
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ inputs.token }}
           RELEASE_VERSION: ${{ inputs.version }}
 
       - name: setup python
@@ -86,5 +83,5 @@ jobs:
           git push origin ${{ env.RELEASE_BRANCH }}
         env:
           RELEASE_BRANCH: "${{ steps.create-branch.outputs.release_branch }}"
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ inputs.token }}
           BRANCH_NAME: chore-${{ github.workflow }}-${{ github.run_number }}
