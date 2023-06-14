@@ -14,9 +14,11 @@ on:
       version:
         description: "The version to release. e.g: '5.0.1'"
         required: true
-      token:
+    secrets:
+      GH_TOKEN:
         description: "The Github token to use."
         required: true
+      
 
 jobs:
   create:
@@ -48,7 +50,7 @@ jobs:
           git checkout -b $R_BRANCH && git push origin $R_BRANCH || git checkout $R_BRANCH
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ inputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           RELEASE_VERSION: ${{ inputs.version }}
 
       - name: setup python
@@ -72,28 +74,14 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.version }}
 
-      - name: Push changes to branch on Github repository
-        id: push-changes
+      - name: Create PR for changelog
         run: |
-          git checkout -b "prepare_release_${RELEASE_VERSION}"
+          git config user.name "Ansible Bot"
+          git config user.email devtools@ansible.com
           git add -A
-          git -c user.name="$GIT_USER_NAME" -c user.email="$GIT_USER_EMAIL" commit -m "Release ${{ inputs.version }}" --author="$GIT_AUTHOR"
-          git push origin "prepare_release_${RELEASE_VERSION}"
-          echo "created_branch=prepare_release_${RELEASE_VERSION}" >> $GITHUB_OUTPUT
-        shell: bash
+          git commit -m "Release ${{ inputs.version }}"
+          git push origin ${{ env.RELEASE_BRANCH }}
         env:
-          RELEASE_VERSION: ${{ inputs.version }}
-          GITHUB_TOKEN: ${{ inputs.token }}
-          GIT_USER_NAME: "github-actions[bot]"
-          GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
-          GIT_AUTHOR: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
-
-      - name: Create Pull Request
-        uses: ansible-network/github_actions/.github/actions/create_pullrequest@main
-        with:
-          token: ${{ inputs.token }}
-          repository: ${{ github.repository }}
-          base_branch: ${{ steps.create-branch.outputs.release_branch }}
-          head_branch: ${{ steps.push-changes.outputs.created_branch }}
-          title: "Prepare release ${{ inputs.version }}"
-          body: "Automatic changes for Release ${{ inputs.version }}"
+          RELEASE_BRANCH: "${{ steps.create-branch.outputs.release_branch }}"
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          BRANCH_NAME: chore-${{ github.workflow }}-${{ github.run_number }}
