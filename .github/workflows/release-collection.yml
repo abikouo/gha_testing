@@ -48,7 +48,7 @@ jobs:
           git checkout -b $R_BRANCH && git push origin $R_BRANCH || git checkout $R_BRANCH
         shell: bash
         env:
-          GITHUB_TOKEN: ${{ input.token }}
+          GITHUB_TOKEN: ${{ inputs.token }}
           RELEASE_VERSION: ${{ inputs.version }}
 
       - name: setup python
@@ -83,7 +83,7 @@ jobs:
         shell: bash
         env:
           RELEASE_VERSION: ${{ inputs.version }}
-          GITHUB_TOKEN: ${{ input.token }}
+          GITHUB_TOKEN: ${{ inputs.token }}
           GIT_USER_NAME: "github-actions[bot]"
           GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
           GIT_AUTHOR: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
@@ -91,7 +91,7 @@ jobs:
       - name: Create Pull Request
         uses: ansible-network/github_actions/.github/actions/create_pullrequest@main
         with:
-          token: ${{ input.token }}
+          token: ${{ inputs.token }}
           repository: ${{ github.repository }}
           base_branch: ${{ steps.create-branch.outputs.release_branch }}
           head_branch: ${{ steps.push-changes.outputs.created_branch }}
