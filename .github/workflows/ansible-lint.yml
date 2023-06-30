@@ -1,0 +1,12 @@
+name: ansible-lint
+
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+
+jobs:
+  ansible-lint:
+    uses: ansible-network/github_actions/.github/workflows/ansible-lint.yml@v6.17.2
