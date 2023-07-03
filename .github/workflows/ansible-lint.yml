@@ -5,6 +5,9 @@ on:
       pull_request_url:
         description: The url of the pull request to test
         required: true
+      ansible_lint_ref:
+        description: The ansible lint ref
+        default: 'main'
 
 jobs:
   ansible-lint:
@@ -15,5 +18,25 @@ jobs:
           url: ${{ inputs.pull_request_url }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate .git/ansible-lint-requirements.txt
+        shell: bash
+        run: |
+          wget --output-file=.git/ansible-lint-requirements.txt https://raw.githubusercontent.com/ansible/ansible-lint/${{ inputs.ansible_lint_ref }}/.config/requirements-lock.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          cache: pip
+          cache-dependency-path: .git/ansible-lint-requirements.txt
+          python-version: "3.11"
+
+      - name: Install ansible-lint
+        shell: bash
+        run: |
+          cd $GITHUB_ACTION_PATH
+          pip install "ansible-lint[lock] @ git+https://github.com/ansible/ansible-lint@${{ inputs.ansible_lint_ref }}"
+          ansible-lint --version
+
       - name: Run ansible-lint
-        uses: ansible/ansible-lint@v6.17.2
+        shell: bash
+        run: ansible-lint
