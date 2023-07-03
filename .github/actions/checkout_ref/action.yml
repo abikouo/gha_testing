@@ -12,6 +12,8 @@ inputs:
   fetch-depth:
     description: 'Number of commits to fetch. 0 indicates all history for all branches and tags.'
     default: 1
+  token:
+    description: The token used to perform Github operations
 runs:
   using: composite
   steps:
@@ -30,11 +32,12 @@ runs:
       run: |
         python ${{ github.action_path }}/run.py --ref ${{ inputs.url }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.token }}
 
     - name: checkout repository
       uses: actions/checkout@v3
       with:
+        token: ${{ inputs.token }}
         repository: ${{ steps.read-pr.outputs.repository }}
         path: ${{ inputs.path }}
         ref: ${{ steps.read-pr.outputs.merge_commit_sha }}

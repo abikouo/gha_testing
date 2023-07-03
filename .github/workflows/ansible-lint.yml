@@ -13,6 +13,7 @@ jobs:
       - uses: abikouo/gha_testing/.github/actions/checkout_ref@main
         with:
           url: ${{ inputs.pull_request_url }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run ansible-lint
         uses: ansible/ansible-lint-action@main
