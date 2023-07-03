@@ -95,6 +95,6 @@ These workflows include jobs to validate galaxy importer, manually create releas
 
 - **Step1**: Create/Update release branch - You need to provide the release tag
 <p align="center">
-  <img src="./release/actions.png" width="350" title="click on action">
+  <img src="./actions.png" width="350" title="click on action">
 </p>
 - **Step2**: Merge the pull request to the release branch
