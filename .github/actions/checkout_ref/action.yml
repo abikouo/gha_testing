@@ -1,0 +1,41 @@
+name: "Checkout Reference"
+description: |
+  checkout code for a pull request
+inputs:
+  url:
+    description: |
+      The URL of the pull request
+      e.g: 'https://github.com/ansible-collections/amazon.cloud/pull/111'
+    required: true
+  path:
+    description: "Relative path under $GITHUB_WORKSPACE to place the repository"
+  fetch-depth:
+    description: 'Number of commits to fetch. 0 indicates all history for all branches and tags.'
+    default: 1
+runs:
+  using: composite
+  steps:
+    - name: Set up Python '3.9'
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    - name: install PyGithub
+      run: |
+        pip install -U PyGithub
+      shell: bash
+
+    - id: read-pr
+      shell: bash
+      run: |
+        python ${{ github.action_path }}/run.py --ref ${{ inputs.url }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: checkout repository
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ steps.read-pr.outputs.repository }}
+        path: ${{ inputs.path }}
+        ref: ${{ steps.read-pr.outputs.merge_commit_sha }}
+        fetch-depth: ${{ inputs.fetch-depth }}
