@@ -94,5 +94,7 @@ These workflows include jobs to validate galaxy importer, manually create releas
 ## How to release a collection?
 
 - **Step1**: Create/Update release branch - You need to provide the release tag
-  ![actions](./release/actions.png)
+<p align="center">
+  <img src="./release/actions.png" width="350" title="click on action">
+</p>
 - **Step2**: Merge the pull request to the release branch
