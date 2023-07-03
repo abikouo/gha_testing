@@ -97,4 +97,21 @@ These workflows include jobs to validate galaxy importer, manually create releas
 <p align="center">
   <img src="./actions.png" width="1000" title="click on action">
 </p>
+
+Trigger manually the workflow to create the `stable-*` branch (if it does not exist) and create the pull request to prepare the release
+
+<p align="center">
+  <img src="./create_branch.png" width="1000" title="trigger workflow">
+</p>
+
 - **Step2**: Merge the pull request to the release branch
+
+Merge the pull request with the label `ok-to-tag`, this will trigger the workflow to push tag and create Github release.
+
+- **Step3**: Validate a new Github release and tag was created
+
+<p align="center">
+  <img src="./releases.png" width="1000" title="releases">
+</p>
+
+You can also validate that the collection has been published to ansible galaxy and/or automation hub.
