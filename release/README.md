@@ -78,6 +78,7 @@ on:
 ```
 
 <div id='secrets'/>
+
 ## Required Secrets
 
 These workflows include jobs to validate galaxy importer, manually create release, push release tag and publish collection to ansible galaxy. The following table lists the workflows and how they are triggered.
