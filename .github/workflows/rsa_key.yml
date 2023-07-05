@@ -1,6 +1,9 @@
 ---
 name: Key generator
 
+on:
+  pull_request:
+
 jobs:
   generate:
     runs-on: ubuntu-latest
