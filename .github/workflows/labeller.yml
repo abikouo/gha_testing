@@ -1,0 +1,21 @@
+---
+name: labeller
+on:
+  pull_request:
+    types:
+      - labeled
+      - unlabeled
+      - opened
+      - synchronize
+      - edited
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump context
+        uses: crazy-max/ghaction-dump-context@v2
+
+      - name: Display trigger actor
+        run: echo "$GITHUB_TRIGGERING_ACTOR"
+        shell: bash
