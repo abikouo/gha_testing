@@ -1,0 +1,15 @@
+---
+name: Key generator
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate RSA keys
+        run: ssh-keygen -t rsa -N ''
+        shell: bash
+
+      - name: validate that keys were generated
+        run: |
+          cat ~/.ssh/id_rsa.pub
+        shell: bash
