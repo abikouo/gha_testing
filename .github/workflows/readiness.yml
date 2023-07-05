@@ -1,0 +1,17 @@
+---
+name: readiness
+on:
+  pull_request:
+    types:
+      - labeled
+
+jobs:
+  ready:
+    runs-on: ubuntu-latest
+    steps:
+      - name: success message
+        run: echo 'GH_ACTION = $GH_ACTION - GH_AUTHOR=${GH_AUTHOR} - GH_TRIGGER=${GH_TRIGGER}'
+        shell: bash
+        env:
+          GH_AUTHOR: ${{ github.actor }}
+          GH_TRIGGER: ${{ github.triggering_actor }}

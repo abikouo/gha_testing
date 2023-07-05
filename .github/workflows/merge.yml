@@ -1,0 +1,19 @@
+name: Merge
+
+on:
+  workflow_run:
+    workflows: [readiness]
+    types:
+      - completed
+
+jobs:
+  run:
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: The pull request has been merged
+        run: the pull request has been merged
+        shell: bash
