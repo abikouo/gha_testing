@@ -12,8 +12,11 @@ on:
 jobs:
   ready:
     runs-on: ubuntu-latest
-    if: ${{ github.event.action == "labeled" }} and ${{ github.actor != github.triggering_actor }} and ${{ contains(github.event.pull_request.labels.*.name, 'mergeit') }}
     steps:
       - name: success message
-        run: echo 'The pull request is ready to be merged'
+        run: echo 'GH_ACTION = $GH_ACTION - GH_AUTHOR=${GH_AUTHOR} - GH_TRIGGER=${GH_TRIGGER}'
         shell: bash
+        env:
+          GH_ACTION: ${{ github.event.action }}
+          GH_AUTHOR: ${{ github.actor }}
+          GH_TRIGGER: ${{ github.triggering_actor }}
