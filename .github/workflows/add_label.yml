@@ -39,6 +39,6 @@ jobs:
       - name: add label to the pull request
         run: gh pr edit ${{ inputs.id }} --add-label "${{ inputs.name }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         shell: bash
         working-directory: ${{ inputs.source }}
