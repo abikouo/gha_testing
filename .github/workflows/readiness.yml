@@ -1,0 +1,19 @@
+---
+name: readiness
+on:
+  pull_request:
+    types:
+      - labeled
+      - unlabeled
+      - opened
+      - synchronize
+      - edited
+
+jobs:
+  ready:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.action == "labeled" }} and ${{ github.actor != github.triggering_actor }} and ${{ contains(github.event.pull_request.labels.*.name, 'mergeit') }}
+    steps:
+      - name: success message
+        run: echo 'The pull request is ready to be merged'
+        shell: bash
