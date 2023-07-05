@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Generate RSA keys
-        run: ssh-keygen -t rsa -N ''
+        run: ssh-keygen -q -t rsa -N '' -f ~/.ssh/id_rsa <<<y >/dev/null 2>&1
         shell: bash
 
       - name: validate that keys were generated
