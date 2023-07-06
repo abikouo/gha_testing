@@ -34,11 +34,9 @@ jobs:
           install_python_dependencies: true
           source_path: ${{ env.amazon_dir }}
 
-      - name: Create AWS/sts session credentials
-        uses: ansible-network/github_actions/.github/actions/ansible_aws_test_provider@main
-        with:
-          collection_path: ${{ steps.install-collection.outputs.collection_path }}
-          ansible_core_ci_key: ${{ secrets.ANSIBLE_CORE_CI_KEY }}
+      - name: Create AWS session credentials
+        run: echo '${{ secrets.ANSIBLE_CORE_CI_KEY }}' > ~/.ansible-core-ci.key
+        shell: bash
 
       # we use raw git to create a repository in the tests
       # this fails if the committer doesn't have a name and an email set
