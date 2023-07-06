@@ -40,7 +40,7 @@ jobs:
         uses: abikouo/github_actions/.github/actions/ansible_test_splitter@splitter_for_roles
         with:
           collections_to_test: ${{ env.source_dir }}
-          total_jobs: 2
+          total_jobs: 3
           base_ref: main
 
       - name: Display targets
@@ -53,11 +53,13 @@ jobs:
       - check
     env:
       test_targets: ${{ needs.check.outputs.test_targets }}
+      test_prefix: "cloud.aws_ops-${{ matrix.workflow-id }}"
     strategy:
       fail-fast: false
       matrix:
-        workflow-id: ['1', '2']
+        workflow-id: ['1', '2', '3']
     name: "run-${{ matrix.workflow-id }}"
+    if: ${{ contains(env.test_targets, env.test_prefix) }}
     steps:
       - name: Read ansible-test targets
         id: read-targets
