@@ -72,7 +72,7 @@ jobs:
   run:
     runs-on: ubuntu-latest
     needs:
-      - build-matrix
+      - build_matrix
     env:
       test_targets: ${{ needs.build_matrix.outputs.test_targets }}
     strategy:
