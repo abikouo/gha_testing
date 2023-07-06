@@ -1,18 +1,10 @@
-authors:
-  - abikouo (https://github.com/abikouo)
-description: Collection to test Ansible cloud Github actions.
-documentation: ''
-homepage: ''
-issues: https://github.com/abikouo/gha_testing/issues
-license_file: ''
 namespace: abikouo
-name: gha
-readme: ''
-repository: https://github.com/abikouo/gha_testing
-tags:
-  - CI
-  - github
-  - actions
+name: gha_actions
 version: 0.1.0
-build_ignore:
-  - '*.tar.gz'
+readme: README.md
+authors:
+  - abikouo (@abikouo)
+description: test collection
+license_file: COPYING
+tags: [amazon, aws, cloud]
+repository: https://github.com/abikouo/gha_testing
