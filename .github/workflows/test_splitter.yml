@@ -58,14 +58,14 @@ jobs:
       - name: Compute matrix
         id: compute-matrix
         run: |
-          import os
+          import os, json
           test_matrix=[
             item.split(":", maxsplit=1)[0].split('-', maxsplit=1)[1]
             for item in os.environ.get('TEST_TARGETS').split(';') if item.split(':', maxsplit=1)[1]
           ]
           output_path = os.environ.get('GITHUB_OUTPUT')
           with open(output_path, "a", encoding="utf-8") as fw:
-              fw.write(f'test_matrix="{test_matrix}"\n')
+              fw.write(f'test_matrix={json.dumps(test_matrix)}\n')
         shell: python
         env:
           TEST_TARGETS: ${{ needs.check.outputs.test_targets }}
