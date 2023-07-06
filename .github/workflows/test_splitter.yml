@@ -73,14 +73,11 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build_matrix
-    env:
-      test_targets: ${{ needs.build_matrix.outputs.test_targets }}
-      test_matrix: ${{ needs.build_matrix.outputs.matrix }}
-    # strategy:
-    #   fail-fast: false
-    #   matrix:
-    #     workflow-id: ${{ fromJson(needs.build_matrix.outputs.matrix) }}
-    # name: "run-${{ matrix.workflow-id }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow-id: ${{ fromJson(needs.build_matrix.outputs.test_matrix) }}
+    name: "run-${{ matrix.workflow-id }}"
     steps:
       - name: Read ansible-test targets
         id: read-targets
