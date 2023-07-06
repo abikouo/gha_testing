@@ -12,7 +12,10 @@ on:
         description: repository
         required: true
       ref:
-        description: the ref to checkout
+        description: The reference branch/tag/sha to checkout
+        required: true
+      base_ref:
+        description: The base reference
         required: true
 
 jobs:
@@ -36,6 +39,7 @@ jobs:
         with:
           collections_to_test: ${{ env.source_dir }}
           total_jobs: 2
+          base_ref: main
 
       - name: Display targets
         run: echo "test_targets=${{ steps.splitter.outputs.test_targets }}"
