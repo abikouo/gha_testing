@@ -19,11 +19,13 @@ on:
         required: true
 
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
     name: ansible test splitter
     env:
       source_dir: "source"
+    outputs:
+      test_targets: ${{ steps.display.outputs.test_targets }}
     steps:
       - name: Checkout the collection repository
         uses: actions/checkout@v3
@@ -42,5 +44,37 @@ jobs:
           base_ref: main
 
       - name: Display targets
+        id: display
         run: echo "test_targets=${{ steps.splitter.outputs.test_targets }}"
+        shell: bash
+  run:
+    runs-on: ubuntu-latest
+    needs:
+      - check
+    env:
+      test_targets: ${{ needs.check.outputs.test_targets }}
+    strategy:
+      fail-fast: false
+      matrix:
+        workflow-id: ['1', '2']
+    name: "run-${{ matrix.workflow-id }}"
+    steps:
+      - name: Read ansible-test targets
+        id: read-targets
+        run: |
+          import os
+          workflow_test_prefix = "cloud.aws_ops-{0}:".format(os.environ.get('TEST_WORKFLOW_ID'))
+          for item in os.environ.get('TEST_TARGETS').split(';'):
+              if item.startswith(workflow_test_prefix):
+                  targets=' '.join(item.split(':', maxsplit=1)[1].split(',')))
+                  output_path = os.environ.get('GITHUB_OUTPUT')
+                  with open(output_path, "a", encoding="utf-8") as fw:
+                      fw.write(f"ansible_test_targets={targets}\n")
+        shell: python
+        env:
+          TEST_WORKFLOW_ID: "${{ matrix.workflow-id }}"
+          TEST_TARGETS: "${{ env.test_targets }}"
+
+      - name: Checkout collection
+        run: echo '${{ steps.read-targets.outputs.ansible_test_targets }}'
         shell: bash
