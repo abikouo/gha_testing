@@ -45,7 +45,7 @@ jobs:
 
       - name: Display targets
         id: display
-        run: echo "test_targets=${{ steps.splitter.outputs.test_targets }}"
+        run: echo "test_targets=${{ steps.splitter.outputs.test_targets }}" >> $GITHUB_OUTPUT
         shell: bash
   run:
     runs-on: ubuntu-latest
