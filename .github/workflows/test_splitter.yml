@@ -59,7 +59,7 @@ jobs:
       matrix:
         workflow-id: ['1', '2', '3']
     name: "run-${{ matrix.workflow-id }}"
-    if: ${{ contains(needs.check.outputs.test_targets, "testing") }}
+    if: ${{ contains(needs.check.outputs.test_targets, 'cloud.aws_ops-${{ matrix.workflow-id }}') }}
     steps:
       - name: Read ansible-test targets
         id: read-targets
