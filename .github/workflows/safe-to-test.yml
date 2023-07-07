@@ -43,19 +43,22 @@ jobs:
       - name: Get user permission for repository
         id: read-permission
         run: |
-          gh api --jq .permission -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" $GH_API_URL
+          PERM=$(gh api --jq .permission -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" $GH_API_URL)
+          echo "user_permission=$PERM" >> $GITHUB_OUTPUT
         env:
           GH_API_URL: "/repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission"
 
       - name: Get pull request labels
-        id: read-labels
-        run: >-
-          gh api --jq '.[] | select(.name == "safe to test") | .name'
-          -H "Accept: application/vnd.github+json"
-          -H "X-GitHub-Api-Version: 2022-11-28"
-          $GH_API_URL
+        id: read-label
+        run: |
+          SAFE_LABEL=$(gh api --jq '.[] | select(.name == "safe to test") | .name' -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" $GH_API_URL)
+          echo "safe_label=$SAFE_LABEL" >> $GITHUB_OUTPUT
         env:
           GH_API_URL: /repos/${{ inputs.repository }}/issues/${{ inputs.id }}/labels
+
+      - name: Display values
+        run: |
+          echo "permission = ${{steps.read-permission.outputs.user_permission}} - label = ${{steps.read-label.outputs.safe_label}}"
 
       - name: Display collaborator message
         run: echo "${{ inputs.login }} is a collaborator for this repository"
