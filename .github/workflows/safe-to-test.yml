@@ -44,11 +44,10 @@ jobs:
           result-encoding: string
           retries: 3
           script: |
-            import { Octokit } from "octokit";
-
-            const octokit = new Octokit({
-              auth: process.env.GITHUB_TOKEN
-            })
+            const octokit = require("@octokit/rest")({
+              log: console,
+              auth: process.env.GITHUB_TOKEN,
+            });
             const user_permission = await octokit.request('GET /repos/{repository}/collaborators/{username}/permission', {
               repository: process.inputs.repository,
               username: process.inputs.login,
