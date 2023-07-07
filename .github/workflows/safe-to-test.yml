@@ -12,7 +12,10 @@ on:
         description: repository
         required: true
       login:
-        description: repository
+        description: login
+        required: true
+      id:
+        description: id
         required: true
 
 jobs:
@@ -44,9 +47,14 @@ jobs:
         env:
           GH_API_URL: "/repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission"
 
+      - name: Get pull request labels
+        id: read-labels
+        run: |
+          gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" $GH_API_URL
+        env:
+          GH_API_URL: /repos/${{ inputs.repository }}/issues/${{ inputs.id }}/labels
+
       - name: Display collaborator message
         run: echo "${{ inputs.login }} is a collaborator for this repository"
         shell: bash
         if: ${{ contains(fromJSON(env.GH_COLLABORATORS_PERMISSION), steps.read-permission.outputs.user_permission) }}
-
-
