@@ -39,18 +39,10 @@ jobs:
 
       - name: Get user permission for repository
         id: read-permission
-        run: >-
-          echo 'user_permission=$(
-          gh api --jq .permission
-          -H "Accept: application/vnd.github+json"
-          -H "X-GitHub-Api-Version: 2022-11-28"
-          $GH_API_URL)' >> $GITHUB_OUTPUT
+        run: |
+          gh api --jq .permission -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" $GH_API_URL
         env:
           GH_API_URL: "/repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission"
-
-      - name: Display user permission
-        run: echo "${{ steps.read-permission.outputs.user_permission }}"
-        shell: bash
 
       - name: Display collaborator message
         run: echo "${{ inputs.login }} is a collaborator for this repository"
