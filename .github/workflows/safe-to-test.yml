@@ -30,6 +30,7 @@ jobs:
         id: authorization
         run: >-
           gh api 
+          --jq .permission
           -H "Accept: application/vnd.github+json"
           -H "X-GitHub-Api-Version: 2022-11-28"
           /repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission
