@@ -20,6 +20,17 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      GH_API_HEADERS: >-
+        -H "Accept: application/vnd.github+json"
+        -H "X-GitHub-Api-Version: 2022-11-28"
+      GH_COLLABORATORS_PERMISSION: >-
+        [
+          "pull",
+          "triage",
+          "push",
+          "maintain",
+          "admin"
+        ]
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
@@ -27,10 +38,15 @@ jobs:
           repository: ${{ inputs.repository }}
 
       - name: Get user permission for repository
-        id: authorization
-        run: >-
-          gh api 
-          --jq .permission
-          -H "Accept: application/vnd.github+json"
-          -H "X-GitHub-Api-Version: 2022-11-28"
-          /repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission
+        id: read-permission
+        run: |
+          echo "user_permission=$(gh api --jq .permission $GH_API_HEADERS $GH_API_URL)" >> $GITHUB_OUTPUT
+        env:
+          GH_API_URL: "/repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission"
+
+      - name: Display collaborator message
+        run: echo "${{ inputs.login }} is a collaborator for this repository"
+        shell: bash
+        if: ${{ contains(fromJSON(env.GH_COLLABORATORS_PERMISSION), steps.read-permission.outputs.user_permission) }}
+
+
