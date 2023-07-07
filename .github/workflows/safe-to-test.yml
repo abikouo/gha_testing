@@ -49,8 +49,11 @@ jobs:
 
       - name: Get pull request labels
         id: read-labels
-        run: |
-          gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" $GH_API_URL
+        run: >-
+          gh api --jq ".[].test"
+          -H "Accept: application/vnd.github+json"
+          -H "X-GitHub-Api-Version: 2022-11-28"
+          $GH_API_URL
         env:
           GH_API_URL: /repos/${{ inputs.repository }}/issues/${{ inputs.id }}/labels
 
