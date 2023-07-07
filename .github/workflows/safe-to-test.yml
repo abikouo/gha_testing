@@ -48,6 +48,10 @@ jobs:
         env:
           GH_API_URL: "/repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission"
 
+      - name: Display user permission
+        run: echo "${{ steps.read-permission.outputs.user_permission }}"
+        shell: bash
+
       - name: Display collaborator message
         run: echo "${{ inputs.login }} is a collaborator for this repository"
         shell: bash
