@@ -40,7 +40,7 @@ jobs:
       - name: Get user permission for repository
         id: read-permission
         run: |
-          echo "user_permission=$(gh api --jq .permission $GH_API_HEADERS $GH_API_URL)" >> $GITHUB_OUTPUT
+          gh api --jq .permission $GH_API_HEADERS $GH_API_URL
         env:
           GH_API_URL: "/repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission"
 
