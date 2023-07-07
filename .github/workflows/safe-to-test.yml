@@ -37,16 +37,34 @@ jobs:
         with:
           repository: ${{ inputs.repository }}
 
-      - name: Get user permission for repository
+      - name: Get User permission on the repository
+        uses: actions/github-script@v6
         id: read-permission
-        run: |
-          gh api --jq .permission $GH_API_HEADERS $GH_API_URL
-        env:
-          GH_API_URL: "/repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission"
+        with:
+          result-encoding: string
+          retries: 3
+          script: |
+            const octokit = new Octokit({
+              auth: process.env.GITHUB_TOKEN
+            })
+            const user_permission = await octokit.request('GET /repos/{repository}/collaborators/{username}/permission', {
+              repository: process.inputs.repository,
+              username: process.inputs.login,
+              headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+              }
+            })
 
-      - name: Display collaborator message
-        run: echo "${{ inputs.login }} is a collaborator for this repository"
-        shell: bash
-        if: ${{ contains(fromJSON(env.GH_COLLABORATORS_PERMISSION), steps.read-permission.outputs.user_permission) }}
+      # - name: Get user permission for repository
+      #   id: read-permission
+      #   run: |
+      #     gh api --jq .permission -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" $GH_API_HEADERS $GH_API_URL
+      #   env:
+      #     GH_API_URL: "/repos/${{ inputs.repository }}/collaborators/${{ inputs.login }}/permission"
+
+      # - name: Display collaborator message
+      #   run: echo "${{ inputs.login }} is a collaborator for this repository"
+      #   shell: bash
+      #   if: ${{ contains(fromJSON(env.GH_COLLABORATORS_PERMISSION), steps.read-permission.outputs.user_permission) }}
 
 
