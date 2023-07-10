@@ -1,68 +1,130 @@
 name: Integration
+
 on:
-  pull_request_target:
-    types:
-      - labeled
-      - opened
-      - reopened
-      - synchronize
+  workflow_dispatch:
+    inputs:
+      ansible_test_targets:
+        description: ansible test targets to test
+        required: true
+      ansible_collection:
+        description: The collection to run target from
+        required: true
+        type: choice
+        options:
+          - community.aws
+          - amazon.aws
+        default: community.aws
 
 jobs:
-  safe-to-test:
-    if: ${{ github.event.label.name == 'safe to test' }} || ${{ github.event.action != 'labeled' }}
-    uses: ansible-network/github_actions/.github/workflows/safe-to-test.yml@main
-  test:
-    needs:
-      - safe-to-test
-    runs-on: ubuntu-latest
+  integration:
     env:
-      source: "./source"
-      amazon_dir: "./amazon_aws"
+      test_targets: ${{ inputs.ansible_test_targets }}
+      amazon_dir: "./amazon"
+      community_dir: "./community"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible-version:
+          - milestone
+        python-version:
+          - "3.9"
+    name: "integration-py${{ matrix.python-version }}-${{ matrix.ansible-version }}"
     steps:
-      - name: Checkout collection
-        uses: actions/checkout@v3
-        with:
-          path: ${{ env.source }}
-          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Read ansible-test targets
+        id: read-targets
+        run: echo "ansible_collection_to_test=${{ inputs.ansible_collection }}" >> $GITHUB_OUTPUT
 
-      - name: Build and install collection
-        id: install-collection
+      # install ansible
+      - name: Install ansible-core (${{ matrix.ansible-version }})
+        run: python3 -m pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible-version }}.tar.gz --disable-pip-version-check
+
+      # install community.aws collection
+      - name: Checkout the collection repository
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/community.aws
+          path: ${{ env.community_dir }}
+          ref: main
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Pre install collections dependencies first so the collection install does not
+        run: ansible-galaxy collection install --pre true -p /home/runner/collections/
+
+      - name: Read collection metadata from galaxy.yml
+        id: identify-community
+        uses: ansible-network/github_actions/.github/actions/identify_collection@main
+        with:
+          source_path: ${{ env.community_dir }}
+
+      - name: Build and install the collection
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
-          source_path: ${{ env.source }}
+          install_python_dependencies: true
+          source_path: ${{ env.community_dir }}
+          collection_path: ${{ steps.identify-community.outputs.collection_path }}
+          tar_file: ${{ steps.identify-community.outputs.tar_file }}
+          ansible_version: ${{ matrix.ansible-version }}
 
-      # checkout and install 'amazon.aws'
-      - name: checkout ansible-collections/amazon.aws
+      # install amazon.aws collection
+      - name: Checkout the collection repository
         uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
         with:
           repository: ansible-collections/amazon.aws
           path: ${{ env.amazon_dir }}
           ref: main
 
-      - name: install amazon.aws collection
+      - name: Pre install collections dependencies first so the collection install does not
+        run: ansible-galaxy collection install --pre true -p /home/runner/collections/
+
+      - name: Read collection metadata from galaxy.yml
+        id: identify-amazon
+        uses: ansible-network/github_actions/.github/actions/identify_collection@main
+        with:
+          source_path: ${{ env.amazon_dir }}
+
+      - name: Build and install the collection
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
           source_path: ${{ env.amazon_dir }}
+          collection_path: ${{ steps.identify-amazon.outputs.collection_path }}
+          tar_file: ${{ steps.identify-amazon.outputs.tar_file }}
+          ansible_version: ${{ matrix.ansible-version }}
 
-      - name: Create AWS session credentials
+      # Determines path to the collection being tested
+      - name: Determines path to the collection being tested
+        id: collection-path
+        run: |
+          if [ "${COLLECTION_TO_TEST}" == "amazon.aws" ]; then
+            echo "path=${AMAZON_COLLECTION_PATH}" >> $GITHUB_OUTPUT
+          else
+            echo "path=${COMMUNITY_COLLECTION_PATH}" >> $GITHUB_OUTPUT
+          fi
+        env:
+          COLLECTION_TO_TEST: ${{ steps.read-targets.outputs.ansible_collection_to_test }}
+          AMAZON_COLLECTION_PATH: ${{ steps.install-amazon.outputs.collection_path }}
+          COMMUNITY_COLLECTION_PATH: ${{ steps.install-community.outputs.collection_path }}
+
+      - name: Create AWS/sts session credentials
         uses: ansible-network/github_actions/.github/actions/ansible_aws_test_provider@main
         with:
-          collection_path: ${{ steps.install-collection.outputs.collection_path }}
+          collection_path: ${{ steps.collection-path.outputs.path }}
           ansible_core_ci_key: ${{ secrets.ANSIBLE_CORE_CI_KEY }}
-
-      # we use raw git to create a repository in the tests
-      # this fails if the committer doesn't have a name and an email set
-      - name: Set up git
-        run: |
-          git config --global user.email gha@localhost
-          git config --global user.name "Github Actions"
-        shell: bash
 
       - name: Run integration tests
         uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
         with:
-          collection_path: ${{ steps.install-collection.outputs.collection_path }}
-          python_version: '3.9'
-          ansible_version: stable-2.14
-          ansible_test_requirement_files: ''
+          collection_path: ${{ steps.collection-path.outputs.path }}
+          python_version: ${{ matrix.python-version }}
+          ansible_version: ${{ matrix.ansible-version }}
+          ansible_test_requirement_files: |
+            requirements.txt
+            test-requirements.txt
+            tests/integration/requirements.txt
+          ansible_test_constraint_files: tests/integration/constraints.txt
+          ansible_test_targets: ${{ steps.read-targets.outputs.ansible_test_targets }}
