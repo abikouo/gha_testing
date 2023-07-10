@@ -19,8 +19,7 @@ jobs:
   integration:
     env:
       test_targets: ${{ inputs.ansible_test_targets }}
-      amazon_dir: "./amazon"
-      community_dir: "./community"
+      source: "./source"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -44,7 +43,7 @@ jobs:
         uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
         with:
           repository: ansible-collections/community.aws
-          path: ${{ env.community_dir }}
+          path: ${{ env.source }}
           ref: main
 
       - name: Set up Python ${{ matrix.python-version }}
@@ -53,47 +52,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Pre install collections dependencies first so the collection install does not
-        run: ansible-galaxy collection install --pre true -p /home/runner/collections/
+        run: ansible-galaxy collection install --pre '-r ${{ env.source }}/tests/integration/requirements.yml' -p /home/runner/collections/
 
       - name: Read collection metadata from galaxy.yml
-        id: identify-community
+        id: identify
         uses: ansible-network/github_actions/.github/actions/identify_collection@main
         with:
-          source_path: ${{ env.community_dir }}
+          source_path: ${{ env.source }}
 
       - name: Build and install the collection
+        id: install
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
           install_python_dependencies: true
-          source_path: ${{ env.community_dir }}
-          collection_path: ${{ steps.identify-community.outputs.collection_path }}
-          tar_file: ${{ steps.identify-community.outputs.tar_file }}
-          ansible_version: ${{ matrix.ansible-version }}
-
-      # install amazon.aws collection
-      - name: Checkout the collection repository
-        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
-        with:
-          repository: ansible-collections/amazon.aws
-          path: ${{ env.amazon_dir }}
-          ref: main
-
-      - name: Pre install collections dependencies first so the collection install does not
-        run: ansible-galaxy collection install --pre true -p /home/runner/collections/
-
-      - name: Read collection metadata from galaxy.yml
-        id: identify-amazon
-        uses: ansible-network/github_actions/.github/actions/identify_collection@main
-        with:
-          source_path: ${{ env.amazon_dir }}
-
-      - name: Build and install the collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
-        with:
-          install_python_dependencies: true
-          source_path: ${{ env.amazon_dir }}
-          collection_path: ${{ steps.identify-amazon.outputs.collection_path }}
-          tar_file: ${{ steps.identify-amazon.outputs.tar_file }}
+          source_path: ${{ env.source }}
+          collection_path: ${{ steps.identify.outputs.collection_path }}
+          tar_file: ${{ steps.identify.outputs.tar_file }}
           ansible_version: ${{ matrix.ansible-version }}
 
       # Determines path to the collection being tested
@@ -107,8 +81,8 @@ jobs:
           fi
         env:
           COLLECTION_TO_TEST: ${{ steps.read-targets.outputs.ansible_collection_to_test }}
-          AMAZON_COLLECTION_PATH: ${{ steps.install-amazon.outputs.collection_path }}
-          COMMUNITY_COLLECTION_PATH: ${{ steps.install-community.outputs.collection_path }}
+          AMAZON_COLLECTION_PATH: /home/runner/collections/ansible_collections/amazon/aws/
+          COMMUNITY_COLLECTION_PATH: ${{ steps.install.outputs.collection_path }}
 
       - name: Create AWS/sts session credentials
         uses: ansible-network/github_actions/.github/actions/ansible_aws_test_provider@main
