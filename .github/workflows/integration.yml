@@ -52,7 +52,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Pre install collections dependencies first so the collection install does not
-        run: ansible-galaxy collection install --pre '-r${{ env.source }}tests/integration/requirements.yml' -p /home/runner/collections/
+        run: ansible-galaxy collection install --pre '-r${{ env.source }}/tests/integration/requirements.yml' -p /home/runner/collections/
 
       - name: Read collection metadata from galaxy.yml
         id: identify
