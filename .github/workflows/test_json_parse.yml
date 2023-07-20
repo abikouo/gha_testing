@@ -1,0 +1,25 @@
+---
+name: json_parse
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.sha }}'
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      data:
+        description: The json data to parse
+        required: true
+      key:
+        description: The key to read from json data
+        required: true
+
+jobs:
+  json_parser:
+    runs-on: ubuntu-latest
+    steps:
+      - name: parse json key
+        run: |
+          echo '${{ fromJson(inputs.data).${{ inputs.key }} }}'
+        shell: bash
