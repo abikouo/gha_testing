@@ -19,7 +19,16 @@ jobs:
   json_parser:
     runs-on: ubuntu-latest
     steps:
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: install required python libraries
+        run: pip install -U jq
+        shell: bash
+
       - name: parse json key
         run: |
-          echo '${{ fromJson(inputs.data).${{ inputs.key }} }}'
+          echo '${{ fromJson(inputs.data) }}' | jq '."${{ inputs.key }}"'
         shell: bash
