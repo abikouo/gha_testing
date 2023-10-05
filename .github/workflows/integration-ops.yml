@@ -17,6 +17,7 @@ on:
 jobs:
   integration:
     runs-on: ubuntu-latest
+    name: Integration for cloud.aws_ops
     env:
       source: "./source"
       python_version: "3.9"
