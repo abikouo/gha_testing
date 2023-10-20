@@ -1,0 +1,82 @@
+---
+name: migrate_modules
+
+on:
+  workflow_dispatch:
+    inputs:
+      token:
+        description: The Github token to use to create/list pull request
+        required: true
+      module:
+        description: The module to migrate
+        required: true
+      src:
+        description: |
+          The Github repository source, user must have a repository with this name.
+          Please do not specify repository owner, we consider the user running this
+          workflow as the owner. e.g: 'community.aws'
+        required: true
+      dest:
+        description: |
+          The Github repository destination, user must have a repository with this name.
+          Please do not specify repository owner, we consider the user running this
+          workflow as the owner. e.g: 'amazon.aws'
+        required: true
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    name: Migrate modules from community
+    env:
+      GITHUB_TOKEN: ${{ inputs.token }}
+      GITHUB_USERNAME: ${{ github.username }}
+      PY_COLORS: "1"
+      src_collection_path: "~/source"
+      dest_collection_path: "~/destination"
+      promoter_path: "./promoter"
+    steps:
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install ansible-core
+        run: >
+          python3 -m pip install
+          https://github.com/ansible/ansible/archive/milestone.tar.gz
+          --disable-pip-version-check
+
+      # checkout el_grandiose_module_promoter
+      - name: Checkout the repository el_grandiose_module_promoter
+        uses: actions/checkout@v3
+        with:
+          repository: abikouo/el_grandiose_module_promoter
+          ref: automation_1
+          path: ${{ env.promoter_path }}
+
+      # checkout source repository
+      - name: Checkout the source collection
+        uses: actions/checkout@v3
+        with:
+          repository: "${{ github.username }}/${{ inputs.src }}"
+          path: ${{ env.src_collection_path }}
+          fetch-depth: "0"
+
+      # checkout destination repository
+      - name: Checkout the destination collection
+        uses: actions/checkout@v3
+        with:
+          repository: "${{ github.username }}/${{ inputs.dest }}"
+          path: ${{ env.dest_collection_path }}
+          fetch-depth: "0"
+
+      # Run playbook
+      - name: Run playbook to migrate modules
+        run: >
+          ansible-playbook ./migrate.yaml 
+          -e "migrate_module_name=${{ inputs.module }}"
+          -e "migration_src_path=${{ env.src_collection_path }}"
+          -e "migration_dst_path=${{ env.dest_collection_path }}"
+          -v
+        shell: bash
+        working-directory: ${{ env.promoter_path }}
