@@ -14,14 +14,16 @@ on:
         description: |
           The Github repository source, user must have a repository with this name.
           Please do not specify repository owner, we consider the user running this
-          workflow as the owner. e.g: 'community.aws'
-        required: true
+          workflow as the owner.
+        required: false
+        default: 'community.aws'
       dest:
         description: |
           The Github repository destination, user must have a repository with this name.
           Please do not specify repository owner, we consider the user running this
-          workflow as the owner. e.g: 'amazon.aws'
-        required: true
+          workflow as the owner.
+        required: false
+        default: "amazon.aws"
 
 jobs:
   migrate:
