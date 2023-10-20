@@ -31,7 +31,7 @@ jobs:
     name: Migrate modules from community
     env:
       GITHUB_TOKEN: ${{ inputs.token }}
-      GITHUB_USERNAME: ${{ github.username }}
+      GITHUB_USERNAME: ${{ github.actor }}
       PY_COLORS: "1"
       src_collection_path: "~/source"
       dest_collection_path: "~/destination"
@@ -58,7 +58,7 @@ jobs:
       - name: Checkout the source collection
         uses: actions/checkout@v3
         with:
-          repository: "${{ github.username }}/${{ inputs.src }}"
+          repository: "${{ github.actor }}/${{ inputs.src }}"
           path: ${{ env.src_collection_path }}
           fetch-depth: "0"
 
@@ -66,7 +66,7 @@ jobs:
       - name: Checkout the destination collection
         uses: actions/checkout@v3
         with:
-          repository: "${{ github.username }}/${{ inputs.dest }}"
+          repository: "${{ github.actor }}/${{ inputs.dest }}"
           path: ${{ env.dest_collection_path }}
           fetch-depth: "0"
 
