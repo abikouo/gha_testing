@@ -70,9 +70,10 @@ jobs:
           path: ${{ env.dest_collection_path }}
           fetch-depth: "0"
 
-      - name: run simple ansible stat command
-        run: ansible -m stat -a "path=${{ env.src_collection_path }}" localhost
+      - name: list directory from source
+        run: find -maxdepth 1 -mindepth 1 -type d
         shell: bash
+        working-directory: "~/"
 
       # Run playbook
       - name: Run playbook to migrate modules
