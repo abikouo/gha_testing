@@ -75,7 +75,7 @@ jobs:
 
       # Git configuration
       - name: Set global git configuration
-        run: >
+        run: |
           git config --global user.email "$GIT_USER_EMAIL"
           git config --global user.name "$GIT_USER_NAME"
         shell: bash
