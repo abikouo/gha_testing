@@ -37,9 +37,6 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ inputs.token }}
       GITHUB_USERNAME: ${{ github.actor }}
-      GIT_USER_NAME: ${{ github.actor }}
-      GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
-      GIT_AUTHOR: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
       PY_COLORS: "1"
       promoter_path: "./promoter"
     steps:
@@ -75,6 +72,16 @@ jobs:
           repository: "${{ github.actor }}/${{ inputs.dest }}"
           path: "${{ env.promoter_path }}/${{ inputs.dest }}"
           fetch-depth: "0"
+
+      # Git configuration
+      - name: Set global git configuration
+        run: >
+          git config --global user.email "$GIT_USER_EMAIL"
+          git config --global user.name "$GIT_USER_NAME"
+        shell: bash
+        env:
+          GIT_USER_NAME: ${{ github.actor }}
+          GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
 
       # Run playbook
       - name: Run playbook to migrate modules
