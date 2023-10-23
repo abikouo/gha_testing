@@ -39,6 +39,8 @@ jobs:
       GITHUB_USERNAME: ${{ github.actor }}
       PY_COLORS: "1"
       promoter_path: "./promoter"
+      source_path: "source"
+      destination_path: "destination"
     steps:
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -62,7 +64,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: "${{ github.actor }}/${{ inputs.src }}"
-          path: "${{ env.promoter_path }}/${{ inputs.src }}"
+          path: "${{ env.source_path }}"
           fetch-depth: "0"
 
       # checkout destination repository
@@ -70,7 +72,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: "${{ github.actor }}/${{ inputs.dest }}"
-          path: "${{ env.promoter_path }}/${{ inputs.dest }}"
+          path: "${{ env.destination_path }}"
           fetch-depth: "0"
 
       # Git configuration
@@ -88,8 +90,8 @@ jobs:
         run: >
           ansible-playbook ./migrate.yaml 
           -e "migrate_module_name=${{ inputs.module }}"
-          -e "migration_src_path=${{ inputs.src }}"
-          -e "migration_dst_path=${{ inputs.dest }}"
+          -e "migration_src_path=${GITHUB_WORKSPACE}/${{ env.source_path }}"
+          -e "migration_dst_path=${GITHUB_WORKSPACE}/${{ env.destination_path }}"
           -e "branch_prefix=${{ inputs.prefix }}"
           -v
         shell: bash
