@@ -24,6 +24,11 @@ on:
           workflow as the owner.
         required: false
         default: "amazon.aws"
+      prefix:
+        description: The prefix name for branch to create for migration.
+        required: false
+        default: "promote"
+  
 
 jobs:
   migrate:
@@ -75,6 +80,7 @@ jobs:
           -e "migrate_module_name=${{ inputs.module }}"
           -e "migration_src_path=${{ inputs.src }}"
           -e "migration_dst_path=${{ inputs.dest }}"
+          -e "branch_prefix=${{ inputs.prefix }}"
           -v
         shell: bash
         working-directory: ${{ env.promoter_path }}
