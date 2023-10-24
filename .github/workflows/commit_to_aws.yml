@@ -43,6 +43,8 @@ jobs:
               run: |
                 git config --global user.email "abikouo@redhat.com"
                 git config --global user.name "abikouo"
+                git config credential.helper store
+                git pull https://abikouo:${{ inputs.gh_token }}@github.com/${{ inputs.repository }}
               shell: bash
 
             - name: Git commit and push into remote branch
@@ -52,5 +54,3 @@ jobs:
                 git push origin ${{ inputs.branch }} 
               shell: bash
               working-directory: ${{ env.source_path }}
-              env:
-                GITHUB_TOKEN: ${{ inputs.gh_token }}
