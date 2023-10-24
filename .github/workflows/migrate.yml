@@ -37,6 +37,8 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ inputs.token }}
       GITHUB_USERNAME: ${{ github.actor }}
+      GIT_AUTHOR: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
+      GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
       PY_COLORS: "1"
       promoter_path: "./promoter"
       source_path: "source"
