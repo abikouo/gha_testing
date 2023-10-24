@@ -28,17 +28,15 @@ on:
         description: The prefix name for branch to create for migration.
         required: false
         default: "promote"
-  
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
     name: Migrate modules from community
     env:
-      GITHUB_TOKEN: ${{ inputs.token }}
-      GITHUB_USERNAME: ${{ github.actor }}
-      GIT_AUTHOR: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
-      GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+      GH_TOKEN: ${{ inputs.token }}
+      GH_USERNAME: ${{ github.actor }}
+      GH_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
       PY_COLORS: "1"
       promoter_path: "./promoter"
       source_path: "source"
@@ -57,6 +55,7 @@ jobs:
       - name: Checkout the repository el_grandiose_module_promoter
         uses: actions/checkout@v3
         with:
+          persist-credentials: false
           repository: abikouo/el_grandiose_module_promoter
           ref: automation_1
           path: ${{ env.promoter_path }}
@@ -65,6 +64,7 @@ jobs:
       - name: Checkout the source collection
         uses: actions/checkout@v3
         with:
+          persist-credentials: false
           repository: "${{ github.actor }}/${{ inputs.src }}"
           path: "${{ env.source_path }}"
           fetch-depth: "0"
@@ -73,6 +73,7 @@ jobs:
       - name: Checkout the destination collection
         uses: actions/checkout@v3
         with:
+          persist-credentials: false
           repository: "${{ github.actor }}/${{ inputs.dest }}"
           path: "${{ env.destination_path }}"
           fetch-depth: "0"
@@ -80,12 +81,10 @@ jobs:
       # Git configuration
       - name: Set global git configuration
         run: |
-          git config --global user.email "$GIT_USER_EMAIL"
-          git config --global user.name "$GIT_USER_NAME"
+          git config --global user.email "${{ env.GH_EMAIL }}"
+          git config --global user.name "${{ env.GH_USERNAME }}"
         shell: bash
-        env:
-          GIT_USER_NAME: ${{ github.actor }}
-          GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+        working-directory: ${{ env.promoter_path }}
 
       # Run playbook
       - name: Run playbook to migrate modules
