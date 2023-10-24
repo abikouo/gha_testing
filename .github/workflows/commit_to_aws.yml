@@ -33,6 +33,7 @@ jobs:
               uses: actions/checkout@v3
               with:
                 repository: ${{ inputs.repository }}
+                persist-credentials: false
                 path: ${{ env.source_path }}
                 fetch-depth: "0"
 
@@ -45,8 +46,6 @@ jobs:
               run: |
                 git config --global user.email "abikouo@redhat.com"
                 git config --global user.name "abikouo"
-                git config credential.helper store
-                git pull https://abikouo:${{ inputs.gh_token }}@github.com/${{ inputs.repository }}
               shell: bash
               working-directory: ${{ env.source_path }}
 
@@ -57,3 +56,5 @@ jobs:
                 git push origin ${{ inputs.branch }} 
               shell: bash
               working-directory: ${{ env.source_path }}
+              env:
+                GITHUB_TOKEN: ${{ inputs.gh_token }}
