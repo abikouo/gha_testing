@@ -53,8 +53,7 @@ jobs:
               run: |
                 git checkout -B ${{ inputs.branch }} origin/main
                 git commit -am "adding new commit to source tree"
+                git remote set-url origin https://abikouo:${{ inputs.gh_token }}@github.com/${{ inputs.repository }}
                 git push origin ${{ inputs.branch }} 
               shell: bash
               working-directory: ${{ env.source_path }}
-              env:
-                GITHUB_TOKEN: ${{ inputs.gh_token }}
