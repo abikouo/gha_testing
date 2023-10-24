@@ -29,6 +29,9 @@ jobs:
         env:
             source_path: "./source"
         steps:
+            - name: Dump context
+              uses: crazy-max/ghaction-dump-context@v2
+
             - name: 'Checkout the repository ${{ inputs.repository }}'
               uses: actions/checkout@v3
               with:
