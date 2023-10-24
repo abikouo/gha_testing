@@ -94,6 +94,8 @@ jobs:
           -e "migration_src_path=${GITHUB_WORKSPACE}/${{ env.source_path }}"
           -e "migration_dst_path=${GITHUB_WORKSPACE}/${{ env.destination_path }}"
           -e "branch_prefix=${{ inputs.prefix }}"
+          -e "migration_src_repo_name=${{ inputs.src }}"
+          -e "migration_dst_repo_name=${{ inputs.dest }}"
           -v
         shell: bash
         working-directory: ${{ env.promoter_path }}
