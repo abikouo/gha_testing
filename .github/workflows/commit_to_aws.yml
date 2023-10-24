@@ -46,6 +46,7 @@ jobs:
                 git config credential.helper store
                 git pull https://abikouo:${{ inputs.gh_token }}@github.com/${{ inputs.repository }}
               shell: bash
+              working-directory: ${{ env.source_path }}
 
             - name: Git commit and push into remote branch
               run: |
