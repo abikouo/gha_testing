@@ -1,0 +1,56 @@
+---
+name: migrate_modules
+
+on:
+    workflow_dispatch:
+        inputs:
+            token:
+                description: The Github token to use to create/list pull request
+                required: true
+            repository:
+                description: The repository to update
+                required: false
+                default: abikouo/amazon.aws
+            file:
+                description: The file to update in the repository.
+                required: false
+                default: 'galaxy.yml'
+            branch:
+                description: The branch name to create
+                required: false
+                default: 'testing_pr'
+
+jobs:
+    commit:
+        runs-on: ubuntu-latest
+        name: Migrate modules from community
+        env:
+            source_path: "./source"
+        steps:
+            - name: 'Checkout the repository ${{ inputs.repository }}'
+              uses: actions/checkout@v3
+              with:
+                repository: ${{ inputs.repository }}
+                path: ${{ env.source_path }}
+                fetch-depth: "0"
+
+            - name: Update the file
+              run: echo "adding some information into the file" >> ${{ inputs.file }}
+              shell: bash
+              working-directory: ${{ env.source_path }}
+
+            - name: Set global git configuration
+              run: |
+                git config --global user.email "abikouo@redhat.com"
+                git config --global user.name "abikouo"
+              shell: bash
+
+            - name: Git commit and push into remote branch
+              run: |
+                git checkout -B ${{ inputs.branch }} origin/main
+                git commit -am "adding new commit to source tree"
+                git push origin ${{ inputs.branch }} 
+              shell: bash
+              working-directory: ${{ env.source_path }}
+              env:
+                GITHUB_TOKEN: ${{ inputs.token }}
