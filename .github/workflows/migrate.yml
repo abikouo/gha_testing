@@ -51,6 +51,10 @@ jobs:
           https://github.com/ansible/ansible/archive/milestone.tar.gz
           --disable-pip-version-check
 
+      - name: Install python required libraries
+        run: pip install -U pygithub
+        shell: bash
+
       # checkout el_grandiose_module_promoter
       - name: Checkout the repository el_grandiose_module_promoter
         uses: actions/checkout@v3
