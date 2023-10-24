@@ -4,7 +4,7 @@ name: commit
 on:
     workflow_dispatch:
         inputs:
-            token:
+            gh_token:
                 description: The Github token to use to create/list pull request
                 required: true
             repository:
@@ -53,4 +53,4 @@ jobs:
               shell: bash
               working-directory: ${{ env.source_path }}
               env:
-                GITHUB_TOKEN: ${{ inputs.token }}
+                GITHUB_TOKEN: ${{ inputs.gh_token }}
