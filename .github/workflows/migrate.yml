@@ -51,9 +51,6 @@ jobs:
           https://github.com/ansible/ansible/archive/milestone.tar.gz
           --disable-pip-version-check
 
-      - name: Install ruamel.yaml
-        run: python3 -m pip install ruamel.yaml
-
       # checkout el_grandiose_module_promoter
       - name: Checkout the repository el_grandiose_module_promoter
         uses: actions/checkout@v3
