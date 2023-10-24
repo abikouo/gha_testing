@@ -1,5 +1,5 @@
 ---
-name: migrate_modules
+name: commit
 
 on:
     workflow_dispatch:
