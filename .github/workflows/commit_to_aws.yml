@@ -23,7 +23,9 @@ on:
 jobs:
     commit:
         runs-on: ubuntu-latest
-        name: Migrate modules from community
+        permissions:
+            contents: write
+        name: commit on community.aws collection
         env:
             source_path: "./source"
         steps:
