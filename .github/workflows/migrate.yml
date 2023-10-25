@@ -15,7 +15,7 @@ on:
         description: Comma separated list of integration tests to migrate.
         required: true
         type: string
-        default: "[]"
+        default: ""
       src:
         description: |
           The Github repository source, user must have a repository with this name.
