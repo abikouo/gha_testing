@@ -13,7 +13,6 @@ on:
         type: string
       integration_tests:
         description: Comma separated list of integration tests to migrate.
-        required: true
         type: string
         default: ""
       src:
