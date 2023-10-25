@@ -7,9 +7,15 @@ on:
       token:
         description: The Github token to use to create/list pull request
         required: true
-      module:
-        description: The module to migrate
+      modules:
+        description: Comma separated list of modules to migrate
         required: true
+        type: string
+      integration_tests:
+        description: Comma separated list of integration tests to migrate.
+        required: true
+        type: string
+        default: "[]"
       src:
         description: |
           The Github repository source, user must have a repository with this name.
@@ -101,7 +107,8 @@ jobs:
       - name: Run playbook to migrate modules
         run: >
           ansible-playbook ./migrate.yaml 
-          -e "migrate_module_name=${{ inputs.module }}"
+          -e "tests_to_migrate=${{ inputs.integration_tests }}"
+          -e "modules_to_migrate=${{ inputs.modules }}"
           -e "migration_src_path=${GITHUB_WORKSPACE}/${{ env.source_path }}"
           -e "migration_dst_path=${GITHUB_WORKSPACE}/${{ env.destination_path }}"
           -e "branch_prefix=${{ inputs.prefix }}"
