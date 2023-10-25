@@ -42,6 +42,9 @@ jobs:
       source_path: "source"
       destination_path: "destination"
     steps:
+      - name: Hide the inputs values to keep them private in the logs when running this workflow
+        uses: levibostian/action-hide-sensitive-inputs@v1
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -54,7 +57,7 @@ jobs:
           --disable-pip-version-check
 
       - name: Install python required libraries
-        run: pip install -U pygithub ruamel.yaml
+        run: pip install -U pygithub 'ruamel.yaml==0.17.33'
         shell: bash
 
       # checkout el_grandiose_module_promoter
