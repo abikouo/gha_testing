@@ -106,8 +106,8 @@ jobs:
       - name: Run playbook to migrate modules
         run: >
           ansible-playbook ./migrate.yaml 
-          -e "tests_to_migrate=${{ inputs.integration_tests }}"
-          -e "modules_to_migrate=${{ inputs.modules }}"
+          -e "migration_tests=${{ inputs.integration_tests }}"
+          -e "migration_modules=${{ inputs.modules }}"
           -e "migration_src_path=${GITHUB_WORKSPACE}/${{ env.source_path }}"
           -e "migration_dst_path=${GITHUB_WORKSPACE}/${{ env.destination_path }}"
           -e "branch_prefix=${{ inputs.prefix }}"
