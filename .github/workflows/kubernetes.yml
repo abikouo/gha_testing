@@ -1,0 +1,15 @@
+---
+name: k8s_kind
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    name: Kubernetes cluster with local registry
+    steps:
+      - name: Hide the inputs values to keep them private in the logs when running this workflow
+        uses: abikouo/github_actions/.github/actions/ansible_k8s_cluster@kind_with_private_registry
+        with:
+          configure_registry: true
