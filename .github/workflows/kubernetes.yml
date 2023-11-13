@@ -43,7 +43,12 @@ jobs:
         shell: bash
 
       - name: Try login to OCI registry
-        run: helm registry login -u ${{ env.registry_user }} -p '${{ env.register_pass }}' localhost:5001
+        run: >-
+          helm registry login 
+          -u ${{ env.registry_user }}
+          -p '${{ env.register_pass }}'
+          --insecure 
+          localhost:5001
         shell: bash
   
       # - name: Package helm chart
