@@ -8,6 +8,9 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     name: Kubernetes cluster with local registry
+    env:
+      registry_user: ansible
+      register_pass: "test123!"
     steps:
       - name: Install helm
         run: |
@@ -17,7 +20,46 @@ jobs:
           helm version
         shell: bash
 
-      - name: Create kubernetes cluster with local registry
-        uses: abikouo/github_actions/.github/actions/ansible_k8s_cluster@kind_with_private_registry
-        with:
-          configure_registry: true
+      - name: Create credentials for cluster authentication
+        run: echo "${{ env.register_pass }}" | htpasswd -i -c htpasswd ${{ env.registry_user }}
+        shell: bash
+
+      # - name: Create registry container
+      #   command: >-
+      #     docker run -d
+      #     -p {{ registry_port }}:5000
+      #     --restart=always
+      #     --name "{{ registry_name }}"
+      #     -v "{{ _tmpfile.path }}:/auth"
+      #     -e "REGISTRY_AUTH=htpasswd"
+      #     -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm"
+      #     -e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd
+      #     registry:2
+  
+      # - name: try login to OCI registry
+      #   command: >-
+      #     {{ helm_binary_path }} registry login
+      #     -u testuser
+      #     -p 'pass123!'
+      #     localhost:{{ registry_port }}
+  
+      # - name: Package helm chart
+      #   command: >-
+      #     {{ helm_binary_path }} package
+      #     "{{ role_path }}/files/python-chart"
+      #     --destination {{ _tmpfile.path }}
+  
+      # - name: Helm push chart to the registry
+      #   command: >-
+      #     {{ helm_binary_path }} push
+      #     {{ _tmpfile.path }}/python-app-0.1.0.tgz
+      #     oci://localhost:{{ registry_port }}/helm-charts
+  
+      # - name: Show chart from registry
+      #   command: >-
+      #     {{ helm_binary_path }} show all oci://localhost:{{ registry_port }}/helm-charts/python-app
+  
+      # - name: Logout from registry
+      #   command: >-
+      #     {{ helm_binary_path }} registry logout localhost:{{ registry_port }}
+  
