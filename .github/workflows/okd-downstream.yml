@@ -50,3 +50,5 @@ jobs:
         run: make downstream-${{ inputs.command }}
         shell: bash
         working-directory: ${{ env.collection_path }}
+        env:
+          DOWNSTREAM_BUILD_PYTHON: python3.10
