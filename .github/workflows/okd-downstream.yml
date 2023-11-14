@@ -14,11 +14,12 @@ on:
         type: string
       command:
         description: The command to perform
-        choices:
-            - test-sanity
-            - test-units
-            - test-integration
-            - build
+        type: choice
+        options:
+          - test-sanity
+          - test-units
+          - test-integration
+          - build
 
 jobs:
   run:
