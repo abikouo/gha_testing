@@ -71,6 +71,7 @@ jobs:
             git remote add master https://github.com/${{ inputs.repository }}
             git fetch master
             git checkout -B prepare_release_${{ inputs.version }} master/main
+            git config -l
             git push -u origin prepare_release_${{ inputs.version }}
           shell: bash
           env:
