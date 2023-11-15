@@ -55,7 +55,7 @@ jobs:
             python-version: "3.9"
 
         - name: Install required python modules
-          run: pip3 install yq antsibull-changelog
+          run: pip3 install yq tox antsibull-changelog
           shell: bash
 
         - name: Run tox environment prepare_release
