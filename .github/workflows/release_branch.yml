@@ -20,6 +20,9 @@ on:
 jobs:
     release:
       runs-on: ubuntu-latest
+      env:
+        GH_USER: ${{ github.actor }}
+        GH_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
       steps:
         - name: Checkout the repository
           uses: actions/checkout@v3
@@ -36,67 +39,82 @@ jobs:
           env:
             RELEASE_VERSION: ${{ inputs.version }}
 
-        - name: Create release branch on Github repository
-          id: create-branch
+        # Git configuration
+        - name: Set global git configuration
           run: |
-            R_BRANCH="stable-$(echo ${RELEASE_VERSION} | cut -d '.' -f1)"
-            D_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
-            echo "release_branch=$R_BRANCH" >> $GITHUB_OUTPUT
-            git checkout $D_BRANCH
-            git checkout -b $R_BRANCH && git push origin $R_BRANCH || git checkout $R_BRANCH
+            git config --global user.email "${{ env.GH_EMAIL }}"
+            git config --global user.name "${{ env.GH_USER }}"
           shell: bash
-          env:
-            GITHUB_TOKEN: ${{ inputs.token }}
-            RELEASE_VERSION: ${{ inputs.version }}
-
-        - name: setup python
-          uses: actions/setup-python@v4
-          with:
-            python-version: "3.9"
-
-        - name: Install required python modules
-          run: pip3 install yq tox antsibull-changelog
-          shell: bash
-
-        - name: Run tox environment prepare_release
-          continue-on-error: true
-          run: tox -e prepare_release -vv
-          shell: bash
-          env:
-            RELEASE_VERSION: ${{ inputs.version }}
-
-        - name: Run antsibull-changelog
-          run: antsibull-changelog release --verbose --version '${{ inputs.version }}'
-          shell: bash
-
-        - name: Update galaxy.yml file
-          run: yq -yi ".version = \"$RELEASE_VERSION\"" galaxy.yml
-          shell: bash
-          env:
-            RELEASE_VERSION: ${{ inputs.version }}
-
-        - name: Push changes to branch on Github repository
-          id: push-changes
+        
+        - name: Create and push stable branch to remote repository
           run: |
-            git checkout -b "prepare_release_${RELEASE_VERSION}"
-            git add -A
-            git -c user.name="$GIT_USER_NAME" -c user.email="$GIT_USER_EMAIL" commit -m "Release ${{ inputs.version }}" --author="$GIT_AUTHOR"
-            git push origin "prepare_release_${RELEASE_VERSION}"
-            echo "created_branch=prepare_release_${RELEASE_VERSION}" >> $GITHUB_OUTPUT
+            STABLE_BRANCH="stable-$(echo ${RELEASE_VERSION} | cut -d '.' -f1)"
+            git checkout -B ${STABLE_BRANCH} origin/main
+            git push -u origin ${STABLE_BRANCH}
           shell: bash
-          env:
-            RELEASE_VERSION: ${{ inputs.version }}
-            GITHUB_TOKEN: ${{ inputs.token }}
-            GIT_USER_NAME: "github-actions[bot]"
-            GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
-            GIT_AUTHOR: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
 
-        - name: Create Pull Request
-          uses: ansible-network/github_actions/.github/actions/create_pullrequest@main
-          with:
-            token: ${{ inputs.token }}
-            repository: ${{ inputs.repository }}
-            base_branch: ${{ steps.create-branch.outputs.release_branch }}
-            head_branch: ${{ steps.push-changes.outputs.created_branch }}
-            title: "Prepare release ${{ inputs.version }}"
-            body: "Automatic changes for Release ${{ inputs.version }}"
+
+        # - name: Create release branch on Github repository
+        #   id: create-branch
+        #   run: |
+        #     R_BRANCH="stable-$(echo ${RELEASE_VERSION} | cut -d '.' -f1)"
+        #     D_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
+        #     echo "release_branch=$R_BRANCH" >> $GITHUB_OUTPUT
+        #     git checkout $D_BRANCH
+        #     git checkout -b $R_BRANCH && git push origin $R_BRANCH || git checkout $R_BRANCH
+        #   shell: bash
+        #   env:
+        #     GITHUB_TOKEN: ${{ inputs.token }}
+        #     RELEASE_VERSION: ${{ inputs.version }}
+
+        # - name: setup python
+        #   uses: actions/setup-python@v4
+        #   with:
+        #     python-version: "3.9"
+
+        # - name: Install required python modules
+        #   run: pip3 install yq tox antsibull-changelog
+        #   shell: bash
+
+        # - name: Run tox environment prepare_release
+        #   continue-on-error: true
+        #   run: tox -e prepare_release -vv
+        #   shell: bash
+        #   env:
+        #     RELEASE_VERSION: ${{ inputs.version }}
+
+        # - name: Run antsibull-changelog
+        #   run: antsibull-changelog release --verbose --version '${{ inputs.version }}'
+        #   shell: bash
+
+        # - name: Update galaxy.yml file
+        #   run: yq -yi ".version = \"$RELEASE_VERSION\"" galaxy.yml
+        #   shell: bash
+        #   env:
+        #     RELEASE_VERSION: ${{ inputs.version }}
+
+        # - name: Push changes to branch on Github repository
+        #   id: push-changes
+        #   run: |
+        #     git checkout -b "prepare_release_${RELEASE_VERSION}"
+        #     git add -A
+        #     git -c user.name="$GIT_USER_NAME" -c user.email="$GIT_USER_EMAIL" commit -m "Release ${{ inputs.version }}" --author="$GIT_AUTHOR"
+        #     git push origin "prepare_release_${RELEASE_VERSION}"
+        #     echo "created_branch=prepare_release_${RELEASE_VERSION}" >> $GITHUB_OUTPUT
+        #   shell: bash
+        #   env:
+        #     RELEASE_VERSION: ${{ inputs.version }}
+        #     GITHUB_TOKEN: ${{ inputs.token }}
+        #     GIT_USER_NAME: "github-actions[bot]"
+        #     GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+        #     GIT_AUTHOR: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
+
+        # - name: Create Pull Request
+        #   uses: ansible-network/github_actions/.github/actions/create_pullrequest@main
+        #   with:
+        #     token: ${{ inputs.token }}
+        #     repository: ${{ inputs.repository }}
+        #     base_branch: ${{ steps.create-branch.outputs.release_branch }}
+        #     head_branch: ${{ steps.push-changes.outputs.created_branch }}
+        #     title: "Prepare release ${{ inputs.version }}"
+        #     body: "Automatic changes for Release ${{ inputs.version }}"
