@@ -60,8 +60,8 @@ jobs:
           with:
             repository: ${{ steps.compute-fork.outputs.repository }}
             fetch-depth: "0"
-            # persist-credentials: false
-        
+            persist-credentials: false
+
         - name: Set global git configuration
           run: |
             git config --global user.email "${{ env.GH_EMAIL }}"
@@ -73,8 +73,7 @@ jobs:
             git remote add master https://github.com/${{ inputs.repository }}
             git fetch master
             git checkout -B prepare_release_${{ inputs.version }} master/main
-            git config -l
-            git push -u origin prepare_release_${{ inputs.version }}
+            git push origin prepare_release_${{ inputs.version }}
           shell: bash
           env:
             GITHUB_TOKEN: ${{ inputs.token }}
