@@ -1,0 +1,101 @@
+---
+name: release_branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      token:
+        description: The Github token to use
+        required: true
+        type: string
+      repository:
+        description: The Github repository
+        type: string
+        required: true
+      version:
+        description: The release version
+        required: true
+        type: string
+
+jobs:
+    release:
+      runs-on: ubuntu-latest
+      env:
+        source: "./source"
+      steps:
+        - name: Checkout the repository
+          uses: actions/checkout@v3
+          with:
+            repository: ${{ inputs.repository }}
+            path: ${{ env.source }}
+            fetch-depth: "0"
+
+        - name: Validate version format
+          run: |-
+            python -c "import os, re, sys;
+            version=os.environ.get('RELEASE_VERSION');
+            print('version <%s> is matching expecting format' % version) if re.match(r'^[0-9]+\.[0-9]+\.[0-9]+$', version) else sys.exit(1)"
+          shell: bash
+          env:
+            RELEASE_VERSION: ${{ inputs.version }}
+
+        # - name: Create release branch on Github repository
+        #   id: create-branch
+        #   run: |
+        #     R_BRANCH="stable-$(echo ${RELEASE_VERSION} | cut -d '.' -f1)"
+        #     D_BRANCH=$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')
+        #     echo "release_branch=$R_BRANCH" >> $GITHUB_OUTPUT
+        #     git checkout $D_BRANCH
+        #     git checkout -b $R_BRANCH && git push origin $R_BRANCH || git checkout $R_BRANCH
+        #   shell: bash
+        #   working-directory: ${{ env.source }}
+        #   env:
+        #     GITHUB_TOKEN: ${{ inputs.token }}
+        #     RELEASE_VERSION: ${{ inputs.version }}
+
+        - name: setup python
+          uses: actions/setup-python@v4
+          with:
+            python-version: "3.9"
+
+        - name: Install required python modules
+          run: pip3 install yq
+          shell: bash
+
+        - name: Prepare release
+          uses: abikouo/gha_testing/.github/actions/ansible_prepare_release@main
+          with:
+            path: ${{ env.source }}
+
+        # - name: Update galaxy.yml file
+        #   run: yq -yi ".version = \"$RELEASE_VERSION\"" galaxy.yml
+        #   shell: bash
+        #   env:
+        #     RELEASE_VERSION: ${{ inputs.version }}
+
+        # - name: Push changes to branch on Github repository
+        #   id: push-changes
+        #   run: |
+        #     git checkout -b "prepare_release_${RELEASE_VERSION}"
+        #     git add -A
+        #     git -c user.name="$GIT_USER_NAME" -c user.email="$GIT_USER_EMAIL" commit -m "Release ${{ inputs.version }}" --author="$GIT_AUTHOR"
+        #     git push origin "prepare_release_${RELEASE_VERSION}"
+        #     echo "created_branch=prepare_release_${RELEASE_VERSION}" >> $GITHUB_OUTPUT
+        #   shell: bash
+        #   working-directory: ${{ env.source }}
+        #   env:
+        #     RELEASE_VERSION: ${{ inputs.version }}
+        #     GITHUB_TOKEN: ${{ inputs.token }}
+        #     GIT_USER_NAME: "github-actions[bot]"
+        #     GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+        #     GIT_AUTHOR: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
+
+        # - name: Create Pull Request
+        #   uses: ansible-network/github_actions/.github/actions/create_pullrequest@main
+        #   with:
+        #     token: ${{ inputs.token }}
+        #     repository: ${{ inputs.repository }}
+        #     base_branch: ${{ steps.create-branch.outputs.release_branch }}
+        #     head_branch: ${{ steps.push-changes.outputs.created_branch }}
+        #     title: "Prepare release ${{ inputs.version }}"
+        #     body: "Automatic changes for Release ${{ inputs.version }}"

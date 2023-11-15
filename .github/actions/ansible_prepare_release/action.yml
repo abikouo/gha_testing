@@ -1,0 +1,37 @@
+name: Prepare ansible release
+description: |
+  Run repository tox environment prepare_release if it exists or 
+  create a default one and run it.
+
+inputs:
+  path:
+    description: The path to the collection being released.
+    required: true
+  version:
+    description: The release version.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: setup python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+
+    - name: Install python required libraries
+      run: pip install -U tox antsibull-changelog
+      shell: bash
+
+    - name: Run tox environment prepare_release
+      id: tox_prepare_release
+      run: |
+        res=$(tox -e prepare_release -vv >./tox_output.txt 2>&1)
+        echo "result=${res}" >> $GITHUB_OUTPUT
+      shell: bash
+      env:
+        RELEASE_VERSION: ${{ inputs.version }}
+
+    - name: Display result
+      run: echo "${{ steps.tox_prepare_release.outputs.result }}"
+      shell: bash
