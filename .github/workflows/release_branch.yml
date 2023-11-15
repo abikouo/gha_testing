@@ -24,11 +24,10 @@ jobs:
         GH_USER: ${{ github.actor }}
         GH_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
       steps:
-        - name: Checkout the repository
-          uses: actions/checkout@v3
+        - name: setup python
+          uses: actions/setup-python@v4
           with:
-            repository: ${{ inputs.repository }}
-            fetch-depth: "0"
+            python-version: "3.9"
 
         - name: Validate version format
           run: |-
@@ -38,22 +37,52 @@ jobs:
           shell: bash
           env:
             RELEASE_VERSION: ${{ inputs.version }}
+        
+        - name: Validate repository format
+          run: |-
+            python -c "import os, sys;
+            repo=os.environ.get('REPOSITORY_NAME');
+            print('repository name <%s> is matching expecting format' % repo) if len(repo.split('/')) == 2 else sys.exit(1)"
+          shell: bash
+          env:
+            REPOSITORY_NAME: ${{ inputs.repository }}
 
-        # Git configuration
+        - name: Determine fork repository
+          id: compute-fork
+          run: |
+            echo "repository=${GH_USER}/$(echo '${{ inputs.repository }}' | cut -d '/' -f2 )" >> $GITHUB_OUTPUT
+          shell: bash
+
+        - name: Checkout the repository
+          uses: actions/checkout@v3
+          with:
+            repository: ${{ steps.compute-fork.outputs.repository }}
+            fetch-depth: "0"
+            persist-credentials: false
+        
         - name: Set global git configuration
           run: |
             git config --global user.email "${{ env.GH_EMAIL }}"
             git config --global user.name "${{ env.GH_USER }}"
           shell: bash
-        
-        - name: Create and push stable branch to remote repository
+
+        - name: Configure local repository
           run: |
-            STABLE_BRANCH="stable-$(echo ${RELEASE_VERSION} | cut -d '.' -f1)"
-            git checkout -B ${STABLE_BRANCH} origin/main
-            git push -u origin ${STABLE_BRANCH}
+            git remote add master https://github.com/abikouo/${{ inputs.repository }}
+            git fetch master
+            git checkout -B prepare_release_${{ inputs.version }} master/main
+            git push -u origin prepare_release_${{ inputs.version }}
           shell: bash
-          env:
-            GITHUB_TOKEN: ${{ inputs.token }}
+
+        # - name: Create and push stable branch to remote repository
+        #   run: |
+        #     STABLE_BRANCH="stable-$(echo ${RELEASE_VERSION} | cut -d '.' -f1)"
+        #     git checkout -B ${STABLE_BRANCH} origin/main
+        #     git push -u origin ${STABLE_BRANCH}
+        #   shell: bash
+        #   env:
+        #     GITHUB_TOKEN: ${{ inputs.token }}
+        #     RELEASE_VERSION: ${{ inputs.version }}
 
 
         # - name: Create release branch on Github repository
@@ -69,10 +98,7 @@ jobs:
         #     GITHUB_TOKEN: ${{ inputs.token }}
         #     RELEASE_VERSION: ${{ inputs.version }}
 
-        # - name: setup python
-        #   uses: actions/setup-python@v4
-        #   with:
-        #     python-version: "3.9"
+        
 
         # - name: Install required python modules
         #   run: pip3 install yq tox antsibull-changelog
