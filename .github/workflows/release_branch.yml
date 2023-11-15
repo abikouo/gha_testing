@@ -73,6 +73,9 @@ jobs:
             git checkout -B prepare_release_${{ inputs.version }} master/main
             git push -u origin prepare_release_${{ inputs.version }}
           shell: bash
+          env:
+            GITHUB_TOKEN: ${{ inputs.token }}
+        
 
         # - name: Create and push stable branch to remote repository
         #   run: |
