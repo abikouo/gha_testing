@@ -60,7 +60,7 @@ jobs:
           with:
             repository: ${{ steps.compute-fork.outputs.repository }}
             fetch-depth: "0"
-            persist-credentials: false
+            # persist-credentials: false
         
         - name: Set global git configuration
           run: |
