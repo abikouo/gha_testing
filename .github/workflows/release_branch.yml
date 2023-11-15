@@ -68,7 +68,7 @@ jobs:
 
         - name: Configure local repository
           run: |
-            git remote add master https://github.com/abikouo/${{ inputs.repository }}
+            git remote add master https://github.com/${{ inputs.repository }}
             git fetch master
             git checkout -B prepare_release_${{ inputs.version }} master/main
             git push -u origin prepare_release_${{ inputs.version }}
