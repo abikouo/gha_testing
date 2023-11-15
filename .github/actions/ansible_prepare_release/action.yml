@@ -25,13 +25,9 @@ runs:
 
     - name: Run tox environment prepare_release
       id: tox_prepare_release
-      run: |
-        res=$(tox -e prepare_release -vv >./tox_output.txt 2>&1)
-        echo "result=${res}" >> $GITHUB_OUTPUT
+      continue-on-error: true
+      run: tox -e prepare_release -vv
       shell: bash
+      working-directory: ${{ inputs.path }}
       env:
         RELEASE_VERSION: ${{ inputs.version }}
-
-    - name: Display result
-      run: echo "${{ steps.tox_prepare_release.outputs.result }}"
-      shell: bash

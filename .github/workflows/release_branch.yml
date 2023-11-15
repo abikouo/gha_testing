@@ -66,6 +66,7 @@ jobs:
           uses: abikouo/gha_testing/.github/actions/ansible_prepare_release@main
           with:
             path: ${{ env.source }}
+            version: ${{ inputs.version }}
 
         # - name: Update galaxy.yml file
         #   run: yq -yi ".version = \"$RELEASE_VERSION\"" galaxy.yml
