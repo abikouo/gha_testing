@@ -19,6 +19,9 @@ jobs:
       fail-fast: false
     name: "Generate azure credentials"
     steps:
+      - name: Create tests/integration directory
+        run: mkdir -p tests/integration/
+
       - name: Create AzureRM session credentials
         uses: abikouo/github_actions/.github/actions/ansible_azure_test_provider@ansible_test_providers_20240119
         with:
