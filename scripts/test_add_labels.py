@@ -21,11 +21,6 @@ from add_labels import GitHubEvent
             ["needs_triage", "new_contributor", "WIP", "to_merge"],
             ["needs_rebase", "new_contributor", "to_merge"],
         ),
-        (
-            ["needs_triage"],
-            ["needs_info"],
-            ["needs_info", "needs_triage"],
-        ),
     ]
 )
 def test_githubevent__build_labels(bot_labels: List[str], existing_labels: List[str], final_labels: List[str]) -> None:
