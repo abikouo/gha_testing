@@ -1,0 +1,27 @@
+name: Changelog required
+on:
+  workflow_call:
+    inputs:
+      custom_paths:
+        description: |
+          A comma-separated list of custom paths from which any modified file
+          will require a changelog.
+        required: false
+        type: string
+        default: ""
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    name: Require a changelog
+    if: "!contains(github.event.pull_request.labels.*.name, 'skip-changelog')"
+    steps:
+      - name: Checkout the collection repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: "0"
+
+      - name: Validate changelog
+        uses: abikouo/github_actions/.github/actions/ansible_validate_changelog@test_default_value
+        with:
+          custom_paths: ${{ inputs.custom_paths }}
