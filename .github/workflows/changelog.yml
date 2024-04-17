@@ -1,0 +1,23 @@
+---
+name: Changelog
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - labeled
+      - unlabeled
+      - synchronize
+    branches:
+      - main
+      - stable-*
+
+jobs:
+  changelog:
+    uses: abikouo/github_actions/.github/workflows/changelog.yml@changelog_0417
+    with:
+      custom_paths: "provider,providerutils"
