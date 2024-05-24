@@ -1,5 +1,5 @@
 ---
-name: json_parse
+name: communit-okd-sanity
 
 concurrency:
   group: '${{ github.workflow }} @ ${{ github.sha }}'
