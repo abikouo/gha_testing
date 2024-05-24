@@ -1,0 +1,50 @@
+---
+name: json_parse
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.sha }}'
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: The repository branch name
+        required: true
+      ansible_version:
+        description: The ansible version to checkout
+        required: true
+
+jobs:
+  downstream_sanity:
+    env:
+      source_dir: "./source"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout personal repository
+        uses: actions/checkout@v3
+        with:
+          repository: abikouo/community.okd
+          path: ${{ env.source_dir }}
+          ref: ${{ inputs.branch }}
+
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install ansible-core (${{ inputs.ansible_version }})
+        run: python3 -m pip install https://github.com/ansible/ansible/archive/${{ inputs.ansible_version }}.tar.gz --disable-pip-version-check
+        shell: bash
+      
+      - name: Build downstream collection
+        run: >
+          INSTALL_DOWNSTREAM_COLLECTION_PATH="~/.ansible/collections/ansible_collections"
+          make downstream-build
+        working-directory: ${{ env.source_dir }}
+        shell: bash
+
+      - name: Run sanity tests
+        run: ansible-test sanity --requirements --docker -v
+        working-directory: "~/.ansible/collections/ansible_collections/redhat/openshift/"
+        shell: bash
