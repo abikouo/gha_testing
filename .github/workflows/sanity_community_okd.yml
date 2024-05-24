@@ -39,6 +39,7 @@ jobs:
       
       - name: Build downstream collection
         run: >
+          INSTALL_DOWNSTREAM_COLLECTION_PATH="~/.ansible/collections/ansible_collections"
           make downstream-build
         working-directory: ${{ env.source_dir }}
         shell: bash
