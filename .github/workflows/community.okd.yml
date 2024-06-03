@@ -46,7 +46,7 @@ jobs:
         shell: bash
         working-directory: ${{ env.source }}
 
-      # - name: Perform the action
-      #   run: make test-integration
-      #   shell: bash
-      #   working-directory: ${{ env.source }}
+      - name: Perform the action
+        run: make test-integration
+        shell: bash
+        working-directory: ${{ env.source }}
