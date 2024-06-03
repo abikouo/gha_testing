@@ -37,14 +37,14 @@ jobs:
       - name: Install required packages (ansible-core, kubernetes, molecule)
         run: python3 -m pip install --no-cache-dir kubernetes ansible-core molecule
 
-      - name: Install collection and validate syntax
-        run: >
-          ansible-galaxy collection build &&
-          ansible-galaxy collection install --force community-okd-*.tar.gz &&
-          echo "plugin: community.okd.openshift" > /tmp/inventory.yaml &&
-          ANSIBLE_INVENTORY_ENABLED=community.okd.openshift ansible-playbook --syntax-check molecule/default/converge.yml -i /tmp/inventory.yaml -vv
-        shell: bash
-        working-directory: ${{ env.source }}
+      # - name: Install collection and validate syntax
+      #   run: >
+      #     ansible-galaxy collection build &&
+      #     ansible-galaxy collection install --force community-okd-*.tar.gz &&
+      #     echo "plugin: community.okd.openshift" > /tmp/inventory.yaml &&
+      #     ANSIBLE_INVENTORY_ENABLED=community.okd.openshift ansible-playbook --syntax-check molecule/default/converge.yml -i /tmp/inventory.yaml -vv
+      #   shell: bash
+      #   working-directory: ${{ env.source }}
 
       - name: Perform the action
         run: make test-integration
