@@ -6,13 +6,13 @@ on:
     inputs:
       repository:
         description: The Github repository to checkout.
-        default: openshift/community.okd
+        default: abikouo/community.okd
         type: string
         required: false
       ref:
         description: The reference to checkout.
         required: false
-        default: main
+        default: testing_ci_20240603
         type: string
 
 jobs:
