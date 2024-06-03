@@ -35,7 +35,7 @@ jobs:
           python-version: '3.9'
 
       - name: Install required packages (ansible-core, kubernetes, molecule)
-        run: python3 -m pip install --no-cache-dir kubernetes ansible-core molecule
+        run: python3 -m pip install --no-cache-dir kubernetes ansible-core 'molecule==5.0.1'
 
       - name: Perform the action
         run: make test-integration
