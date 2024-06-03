@@ -1,0 +1,43 @@
+---
+name: community.okd-integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: The Github repository to checkout.
+        default: openshift/community.okd
+        type: string
+        required: false
+      ref:
+        description: The reference to checkout.
+        required: false
+        default: main
+        type: string
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    name: integration test community.okd
+    env:
+      source: "./source"
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository }}
+          ref: ${{ inputs.ref }}
+          path: ${{ env.source }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install required packages (ansible-core, kubernetes, molecule)
+        run: python3 -m pip install --no-cache-dir kubernetes ansible-core molecule
+
+      - name: Perform the action
+        run: make test-integration
+        shell: bash
+        working-directory: ${{ env.source }}
