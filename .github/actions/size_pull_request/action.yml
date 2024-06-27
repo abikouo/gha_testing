@@ -27,6 +27,7 @@ runs:
         --path ${{ inputs.path }}
         --repository ${{ github.repository }}
         --pr-number ${{ github.event.pull_request.number }}
+        --base-ref ${{ github.event.pull_request.base.ref }}
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}

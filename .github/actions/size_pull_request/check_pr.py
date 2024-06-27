@@ -27,12 +27,12 @@ def WriteComment(repository: str, pr_number: int, comment: str) -> None:
         raise RuntimeError(f"Post to URL {url} returned status code = {result.status_code}")
 
 
-def RunDiff(path: str, repository: str, pr_number: int) -> None:
+def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
     # Get merge base origin
-    command = "git merge-base FETCH_HEAD origin"
+    command = f"git --no-pager diff --cached --stat origin/{base_ref}"
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
     stdout, stderr = proc.communicate()
-    WriteComment(repository, pr_number, f"[git merge-base] Stderr = {stderr} - Stdout = {stdout}")
+    WriteComment(repository, pr_number, f"[git diff] stderr = {stderr.decode()} - stdout = {stdout.decode()}")
 
     # command = "git diff --cached --stat $(git merge-base FETCH_HEAD origin)"
     # proc = subprocess.Popen(
@@ -64,9 +64,8 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--path", required=True, help="Path to the repository.")
     parser.add_argument("--repository", required=True, help="Repository name org/name.")
-    parser.add_argument(
-        "--pr-number", type=int, required=True, help="The pull request number."
-    )
+    parser.add_argument("--pr-number", type=int, required=True, help="The pull request number.")
+    parser.add_argument("--base-ref", required=True, help="The pull request base ref.")
 
     args = parser.parse_args()
     RunDiff(args.path, args.repository, args.pr_number)
