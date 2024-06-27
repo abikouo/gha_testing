@@ -69,10 +69,10 @@ def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
     stdout, stderr = proc.communicate()
     name_status = defaultdict(list)
     for i in stdout.decode().split("\n"):
-        m = re.match('^(A|M|D)( *)(.+)', i)
+        m = re.match('^(A|M|D)\t(.+)', i)
         if m:
             name_status[m.group(1)].append(m.group(3))
-    WriteComment(repository, pr_number, f"[git diff] name_status = {name_status}")
+    WriteComment(repository, pr_number, f"[git diff] name_status = {dict(name_status)}")
     return True
 
 
