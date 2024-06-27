@@ -4,7 +4,6 @@
 # GNU General Public License v3.0+
 #     (see https://www.gnu.org/licenses/gpl-3.0.txt)
 
-import json
 import os
 import re
 import subprocess
@@ -56,9 +55,8 @@ def AddLabelToPR(repository: str, pr_number: int, type: str) -> None:
             f"Unable to retrieve labels from issue {repository}/{pr_number} - status_code = {response.status_code}"
         )
 
-    WriteComment(repository, pr_number, f"Labels => {response.json()}")
     pr_labels_to_remove = [
-        x["name"] for x in json.loads(response.json()) if x["name"] in all_labels
+        x["name"] for x in response.json() if x["name"] in all_labels
     ]
 
     # Remove labels from issue
