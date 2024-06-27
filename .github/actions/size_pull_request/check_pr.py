@@ -96,15 +96,10 @@ def LabelCommentPR(
         AddLabelToPR(repository, pr_number, type)
         if type == "XL":
             comment = (
-                f"<b>This is a big Pull Request, we found {pr_size} changes (additions and deletions).</b><br/>"
+                f"<b>This is a big Pull Request, we found {int(pr_size)} changes (additions and deletions).</b><br/>"
                 "We strongly recommend that you break down this Pull Request into smaller ones to ease the review process."
             )
             WriteComment(repository, pr_number, comment)
-        comment = (
-                f"<b>This is a big Pull Request, we found {pr_size} changes (additions and deletions).</b><br/>"
-                "We strongly recommend that you break down this Pull Request into smaller ones to ease the review process."
-            )
-        WriteComment(repository, pr_number, comment)
 
 
 def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
