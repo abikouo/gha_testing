@@ -136,10 +136,10 @@ def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
                 cwd=path,
             )
             stdout, _ = proc.communicate()
-            m = re.search(f"(\d*) deletion[s]?\(\-\)", stdout.decode())
+            m = re.search(f"(\\d*) deletion[s]?\\(\\-\\)", stdout.decode())
             if m:
                 deletions += int(m.group(1))
-            m = re.search(f"(\d*) insertion[s]?\(\+\)", stdout.decode())
+            m = re.search(f"(\\d*) insertion[s]?\\(\\+\\)", stdout.decode())
             if m:
                 insertions += int(m.group(1))
     LabelCommentPR(repository, pr_number, insertions, deletions)
