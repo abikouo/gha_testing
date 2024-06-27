@@ -27,7 +27,8 @@ def WriteComment(repository: str, pr_number: int, comment: str) -> None:
 
 
 def RunDiff(path: str, repository: str, pr_number: int) -> None:
-    command = ["git diff --cached --stat $(git merge-base FETCH_HEAD origin)"]
+    # Get merge base origin
+    command = "git diff --cached --stat $(git merge-base FETCH_HEAD origin)"
     proc = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path
     )
