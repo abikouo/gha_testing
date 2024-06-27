@@ -5,14 +5,15 @@ on:
       - opened
       - reopened
       - synchronize
-    branches:
-      - main
-      - stable-*
 
 jobs:
   pull-request-size:
     runs-on: ubuntu-latest
     permissions:
-        contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      - uses: abikouo/gha_testing/.github/actions/size_pull_request@main
+        with:
+          path: "."
+          github_token: ${{ github.token }}
