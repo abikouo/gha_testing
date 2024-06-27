@@ -10,6 +10,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: "0"
       - uses: abikouo/gha_testing/.github/actions/size_pull_request@main
         with:
           path: "."
