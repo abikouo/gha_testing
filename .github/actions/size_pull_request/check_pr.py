@@ -64,36 +64,31 @@ def WriteComment(repository: str, pr_number: int, comment: str) -> None:
 
 def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
     # List files
-    command = f"git --no-pager diff --cached origin/{base_ref} --name-status"
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
-    stdout, stderr = proc.communicate()
+    git_diff_status = f"git --no-pager diff --cached origin/{base_ref} --name-status"
+    proc = subprocess.Popen(git_diff_status, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
+    stdout, _ = proc.communicate()
     name_status = defaultdict(list)
     for i in stdout.decode().split("\n"):
         m = re.match('^(A|M|D)[\t](.+)', i)
         if m:
             name_status[m.group(1)].append(m.group(2))
-    WriteComment(repository, pr_number, f"[git diff] name_status = {dict(name_status)}")
-    return True
 
-
-    # Get merge base origin
-    command = f"git --no-pager diff --cached --stat origin/{base_ref}"
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
-    stdout, stderr = proc.communicate()
-    WriteComment(repository, pr_number, f"[git diff] stderr = {stderr.decode()} - stdout = {stdout.decode()}")
-    m = re.search(
-        "(\d*) files changed, (\d*) insertions\(\+\), (\d*) deletions\(\-\)",
-        stdout.decode(),
-    )
-    if m:
-        files = int(m.group(1))
-        insertions = int(m.group(2))
-        deletions = int(m.group(3))
-        WriteComment(
-            repository,
-            pr_number,
-            f"files = {files} - insertions = {insertions} - deletions = {deletions}",
-        )
+    # Compute insertion/deletion
+    insertions, deletions = 0, 0
+    for type, files in name_status.items():
+        if type == "D":
+            continue
+        for f in files:
+            git_diff_stat = f"git --no-pager diff --cached --stat origin/{base_ref} -- {f}"
+            proc = subprocess.Popen(git_diff_stat, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
+            stdout, _ = proc.communicate()
+            m = re.search(f"(\d*) deletion[s]?\(\-\)", stdout.decode())
+            if m:
+                deletions += int(m.group(1))
+            m = re.search(f"(\d*) insertion[s]?\(\+\)", stdout.decode())
+            if m:
+                insertions += int(m.group(1))
+    WriteComment(repository, pr_number, f"files = {name_status} - insertions = {insertions} - deletions = {deletions}")
 
 
 if __name__ == "__main__":
