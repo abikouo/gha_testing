@@ -22,35 +22,41 @@ def WriteComment(repository: str, pr_number: int, comment: str) -> None:
         },
         json={"body": comment},
     )
-    if result.status_code != 200:
+    # Checking for Http status code '201' (created)
+    if result.status_code != 201:
         raise RuntimeError(f"Post to URL {url} returned status code = {result.status_code}")
 
 
 def RunDiff(path: str, repository: str, pr_number: int) -> None:
     # Get merge base origin
-    command = "git diff --cached --stat $(git merge-base FETCH_HEAD origin)"
-    proc = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path
-    )
-    out, _ = proc.communicate()
-    WriteComment(
-        repository,
-        pr_number,
-        f"Output => {out.decode()}",
-    )
-    m = re.search(
-        "(\d*) files changed, (\d*) insertions\(\+\), (\d*) deletions\(\-\)",
-        out.decode(),
-    )
-    if m:
-        files = int(m.group(1))
-        insertions = int(m.group(2))
-        deletions = int(m.group(3))
-        WriteComment(
-            repository,
-            pr_number,
-            f"files = {files} - insertions = {insertions} - deletions = {deletions}",
-        )
+    command = "git merge-base FETCH_HEAD origin"
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
+    stdout, stderr = proc.communicate()
+    WriteComment(repository, pr_number, f"[git merge-base] Stderr = {stderr} - Stdout = {stdout}")
+
+    # command = "git diff --cached --stat $(git merge-base FETCH_HEAD origin)"
+    # proc = subprocess.Popen(
+    #     command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path
+    # )
+    # out, _ = proc.communicate()
+    # WriteComment(
+    #     repository,
+    #     pr_number,
+    #     f"Output => {out.decode()}",
+    # )
+    # m = re.search(
+    #     "(\d*) files changed, (\d*) insertions\(\+\), (\d*) deletions\(\-\)",
+    #     out.decode(),
+    # )
+    # if m:
+    #     files = int(m.group(1))
+    #     insertions = int(m.group(2))
+    #     deletions = int(m.group(3))
+    #     WriteComment(
+    #         repository,
+    #         pr_number,
+    #         f"files = {files} - insertions = {insertions} - deletions = {deletions}",
+    #     )
 
 
 if __name__ == "__main__":
