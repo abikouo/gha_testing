@@ -33,30 +33,19 @@ def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path)
     stdout, stderr = proc.communicate()
     WriteComment(repository, pr_number, f"[git diff] stderr = {stderr.decode()} - stdout = {stdout.decode()}")
-
-    # command = "git diff --cached --stat $(git merge-base FETCH_HEAD origin)"
-    # proc = subprocess.Popen(
-    #     command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=path
-    # )
-    # out, _ = proc.communicate()
-    # WriteComment(
-    #     repository,
-    #     pr_number,
-    #     f"Output => {out.decode()}",
-    # )
-    # m = re.search(
-    #     "(\d*) files changed, (\d*) insertions\(\+\), (\d*) deletions\(\-\)",
-    #     out.decode(),
-    # )
-    # if m:
-    #     files = int(m.group(1))
-    #     insertions = int(m.group(2))
-    #     deletions = int(m.group(3))
-    #     WriteComment(
-    #         repository,
-    #         pr_number,
-    #         f"files = {files} - insertions = {insertions} - deletions = {deletions}",
-    #     )
+    m = re.search(
+        "(\d*) files changed, (\d*) insertions\(\+\), (\d*) deletions\(\-\)",
+        stdout.decode(),
+    )
+    if m:
+        files = int(m.group(1))
+        insertions = int(m.group(2))
+        deletions = int(m.group(3))
+        WriteComment(
+            repository,
+            pr_number,
+            f"files = {files} - insertions = {insertions} - deletions = {deletions}",
+        )
 
 
 if __name__ == "__main__":
