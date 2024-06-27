@@ -68,4 +68,4 @@ if __name__ == "__main__":
     parser.add_argument("--base-ref", required=True, help="The pull request base ref.")
 
     args = parser.parse_args()
-    RunDiff(args.path, args.repository, args.pr_number)
+    RunDiff(args.path, args.repository, args.pr_number, args.base_ref)
