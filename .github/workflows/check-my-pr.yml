@@ -9,8 +9,8 @@ on:
         default: ansible-collections/amazon.aws
         type: string
       pr_number:
-        description: The pull request number.
-        type: number
+        description: The comma-separated list of pull request numbers.
+        type: string
 
 jobs:
   run:

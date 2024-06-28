@@ -135,10 +135,10 @@ def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
 
 def CheckPR(repository: str, pr_number: int) -> str:
     # Get pull request
-    url = f"https://api.github.com/repos/{repository}/pulls/{pr_number}/"
+    url = f"https://api.github.com/repos/{repository}/pulls/{pr_number}"
     response = requests.get(url, headers=read_headers())
     if response.status_code != 200:
-        raise RuntimeError(f"unable to retrieve pull request {repository}/{pr_number} - status code = {response.status_code}")
+        raise RuntimeError(f"unable to retrieve pull request '{url}' - status code = {response.status_code}")
 
     head_repo_url = response.json()["head"]["repo"]["html_url"]
     head_branch = response.json()["head"]["ref"]
@@ -173,7 +173,11 @@ if __name__ == "__main__":
     """Check PR size and push corresponding message and/or add label."""
     parser = ArgumentParser()
     parser.add_argument("--repository", required=True, help="Repository name org/name.")
-    parser.add_argument("--pr-number", type=int, required=True, help="The pull request number.")
+    parser.add_argument("--pr-number", type=int, required=True, help="Comma-separated list of pull request number.")
 
     args = parser.parse_args()
-    CheckPR(args.repository, args.pr_number)
+    for pr_number in args.pr_number:
+        try:
+            CheckPR(args.repository, int(pr_number))
+        except:
+            pass
