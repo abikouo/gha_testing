@@ -8,6 +8,8 @@ import re
 import subprocess
 from argparse import ArgumentParser
 from collections import defaultdict
+from typing import Dict
+import tempfile
 
 import requests
 
@@ -20,15 +22,19 @@ DEFAULT_PR_SIZE_THRESHOLD = {
 }
 
 
+def read_headers() -> Dict[str, str]:
+    return {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Authorization": "Bearer %s" % os.environ.get("GITHUB_TOKEN"),
+    }
+
+
 def WriteComment(repository: str, pr_number: int, comment: str) -> None:
     url = f"https://api.github.com/repos/{repository}/issues/{pr_number}/comments"
     result = requests.post(
         url,
-        headers={
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "Authorization": "Bearer %s" % os.environ.get("GITHUB_TOKEN"),
-        },
+        headers=read_headers(),
         json={"body": comment},
     )
     # Successful call to the API will return '201' (created)
@@ -39,14 +45,9 @@ def WriteComment(repository: str, pr_number: int, comment: str) -> None:
 def AddLabelToPR(repository: str, pr_number: int, type: str) -> None:
     all_labels = [f"size/{k}" for k in DEFAULT_PR_SIZE_THRESHOLD.keys()]
     url_base = f"https://api.github.com/repos/{repository}/issues/{pr_number}/"
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "Authorization": "Bearer %s" % os.environ.get("GITHUB_TOKEN"),
-    }
 
     # Read current labels
-    response = requests.get(url_base + "labels", headers=headers)
+    response = requests.get(url_base + "labels", headers=read_headers())
     if response.status_code != 200:
         raise RuntimeError(
             f"Unable to retrieve labels from issue {repository}/{pr_number} - status_code = {response.status_code}"
@@ -56,14 +57,14 @@ def AddLabelToPR(repository: str, pr_number: int, type: str) -> None:
 
     # Remove labels from issue
     for label in pr_labels_to_remove:
-        response = requests.delete(url_base + f"labels/{label}", headers=headers)
+        response = requests.delete(url_base + f"labels/{label}", headers=read_headers())
         if response.status_code != 200:
             raise RuntimeError(
                 f"Unable to remove label '{label}' from issue {repository}/{pr_number} - status_code = {response.status_code}"
             )
 
     # add new label to pull request
-    response = requests.put(url_base + "labels", headers=headers, json={"labels": [f"size/{type}"]})
+    response = requests.put(url_base + "labels", headers=read_headers(), json={"labels": [f"size/{type}"]})
     if response.status_code != 200:
         raise RuntimeError(
             f"Unable to add label '{label}' to issue {repository}/{pr_number} - status_code = {response.status_code}"
@@ -95,7 +96,7 @@ def LabelCommentPR(repository: str, pr_number: int, insertions: int, deletions: 
 
 def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
     # List files
-    git_diff_status = f"git --no-pager diff --cached origin/{base_ref} --name-status"
+    git_diff_status = f"git --no-pager diff --cached {base_ref} --name-status"
     proc = subprocess.Popen(
         git_diff_status,
         stdout=subprocess.PIPE,
@@ -115,7 +116,7 @@ def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
         if type == "D":
             continue
         for f in files:
-            git_diff_stat = f"git --no-pager diff --cached --stat origin/{base_ref} -- {f}"
+            git_diff_stat = f"git --no-pager diff --cached --stat {base_ref} -- {f}"
             proc = subprocess.Popen(
                 git_diff_stat,
                 stdout=subprocess.PIPE,
@@ -132,13 +133,47 @@ def RunDiff(path: str, repository: str, pr_number: int, base_ref: str) -> None:
     LabelCommentPR(repository, pr_number, insertions, deletions)
 
 
+def CheckPR(repository: str, pr_number: int) -> str:
+    # Get pull request
+    url = f"https://api.github.com/repos/{repository}/pulls/{pr_number}/"
+    response = requests.get(url, headers=read_headers())
+    if response.status_code != 200:
+        raise RuntimeError(f"unable to retrieve pull request {repository}/{pr_number} - status code = {response.status_code}")
+
+    head_repo_url = response.json()["head"]["repo"]["html_url"]
+    head_branch = response.json()["head"]["ref"]
+    base_repo_url = response.json()["base"]["repo"]["html_url"]
+    base_branch = response.json()["base"]["ref"]
+    clone_path = "my_collection"
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        # clone directory
+        git_clone = f"git clone {head_repo_url} {clone_path}"
+        proc = subprocess.Popen(git_clone, stderr=subprocess.PIPE, shell=True, cwd=tmpdirname)
+        stderr = proc.communicate()
+        if proc.returncode != 0:
+            raise RuntimeError(f"failed to clone repository '{head_repo_url}' - stderr = '{stderr.decode()}'")
+        collection_path = os.path.join(tmpdirname, clone_path)
+        # add remote address for base repository
+        git_remote = f"git remote add {base_repo_url} master && git fetch master"
+        proc = subprocess.Popen(git_remote, stderr=subprocess.PIPE, shell=True, cwd=collection_path)
+        if proc.returncode != 0:
+            raise RuntimeError(f"Command '{git_remote}' failed with - stderr = '{stderr.decode()}'")
+
+        # checkout head ref
+        git_checkout = f"git checkout origin/{head_branch}"
+        proc = subprocess.Popen(git_checkout, stderr=subprocess.PIPE, shell=True, cwd=collection_path)
+        if proc.returncode != 0:
+            raise RuntimeError(f"Command '{git_checkout}' failed with - stderr = '{stderr.decode()}'")
+
+        RunDiff(collection_path, repository, pr_number, f"master/{base_branch}")
+
+
 if __name__ == "__main__":
     """Check PR size and push corresponding message and/or add label."""
     parser = ArgumentParser()
-    parser.add_argument("--path", required=True, help="Path to the repository.")
     parser.add_argument("--repository", required=True, help="Repository name org/name.")
     parser.add_argument("--pr-number", type=int, required=True, help="The pull request number.")
-    parser.add_argument("--base-ref", required=True, help="The pull request base ref.")
 
     args = parser.parse_args()
-    RunDiff(args.path, args.repository, args.pr_number, args.base_ref)
+    CheckPR(args.repository, args.pr_number)
