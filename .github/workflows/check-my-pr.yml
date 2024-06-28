@@ -1,0 +1,36 @@
+---
+name: check my pull request
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: The repository
+        default: ansible-collections/amazon.aws
+        type: string
+      pr_number:
+        description: The pull request number.
+        type: number
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install python required libraries
+        run: pip install -U requests
+        shell: bash
+
+      - name: Size my pull request
+        run: >-
+          python3 ./tools/check_pr.py
+          --repository ${{ inputs.repository }}
+          --pr-number ${{ inputs.pr_number }}
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
