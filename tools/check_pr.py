@@ -173,10 +173,10 @@ if __name__ == "__main__":
     """Check PR size and push corresponding message and/or add label."""
     parser = ArgumentParser()
     parser.add_argument("--repository", required=True, help="Repository name org/name.")
-    parser.add_argument("--pr-number", type=int, required=True, help="Comma-separated list of pull request number.")
+    parser.add_argument("--pr-number", required=True, help="Comma-separated list of pull request number.")
 
     args = parser.parse_args()
-    for pr_number in args.pr_number:
+    for pr_number in args.pr_number.split(","):
         try:
             CheckPR(args.repository, int(pr_number))
         except:
