@@ -1,0 +1,15 @@
+name: Backporting
+
+on:
+  pull_request:
+    types:
+      - labeled
+      - unlabeled
+    branches:
+      - main
+
+jobs:
+  ensure:
+    permissions:
+      pull-requests: write
+    uses: abikouo/github_actions/.github/workflows/ensure_backporting.yml@ensure_backporting_1
