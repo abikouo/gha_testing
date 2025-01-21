@@ -1,0 +1,30 @@
+- hosts: localhost
+  gather_facts: false
+
+  # module_defaults:
+  #   group/aws:
+  #     aws_profile: ansible
+  #     region: us-east-1
+
+  # roles:
+  #   - role: setup_connection_aws_ssm
+
+  vars:
+  #   resource_prefix: ansible-ab-ssm-20250120-2
+    tiny_prefix: ansible-ab-ssm-202501
+  
+  tasks:
+    - set_fact:
+        connection_args:
+          region: "eu-west-2"
+    
+    - set_fact:
+        ssm_amis: "{{ lookup('amazon.aws.ssm_parameter', '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2', **connection_args) }}"
+
+    - include_tasks: translate_cloudformation.yml
+      vars:
+        resource_prefix: 'ansible-test-ab-ssm-20250121'
+    
+    # - include_tasks: translate_cloudformation_teardown.yml
+    #   vars:
+    #     resource_prefix: 'ansible-test-ab-ssm-20250121'
