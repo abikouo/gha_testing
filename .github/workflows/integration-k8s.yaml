@@ -34,7 +34,7 @@ jobs:
         env:
           ALL_TARGETS: ${{ inputs.test_targets }}
   integration:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 60
     needs:
       - splitter
