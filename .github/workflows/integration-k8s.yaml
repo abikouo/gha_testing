@@ -85,6 +85,22 @@ jobs:
         run: pip3 install --upgrade 'fallible[compat]'
         shell: bash
 
+      - name: identify collection
+        id: identify
+        uses: ansible-network/github_actions/.github/actions/identify_collection@main
+        with:
+          source_path: ${{ env.source }}
+
+      - name: Build collection
+        run: ansible-galaxy collection build -vvv
+        shell: bash
+        working-directory: ${{ env.source }}
+
+      - name: Install collection and dependencies (with --pre flag)
+        run: ansible-galaxy collection install ./${{ steps.identify.outputs.tar_file }} --pre -p /home/runner/collections
+        shell: bash
+        working-directory: ${{ env.source }}
+
       - name: Disable selinux with selinux_please_lie_to_me
         run: |
           python3 -m pip install wheel --upgrade
@@ -92,18 +108,12 @@ jobs:
           python3 -m pip install selinux_please_lie_to_me
           python3 -m pip install -r requirements.txt -r test-requirements.txt
         shell: bash
+        working-directory: ${{ env.source }}
 
       - name: create kubernetes cluster
         uses: helm/kind-action@v1.8.0
         with:
           node_image: "kindest/node:v1.29.2"
-
-      - name: Build and install collection
-        id: install-src
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
-        with:
-          install_python_dependencies: true
-          source_path: ${{ env.source }}
 
       # Install collection dependencies
       - name: Install collections dependencies
