@@ -81,36 +81,16 @@ jobs:
         with:
           python-version: '${{ env.python_version }}'
 
-      - name: Build and install collection
-        id: install-src
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
-        with:
-          install_python_dependencies: true
-          source_path: ${{ env.source }}
-
-      - name: checkout ansible-collections/cloud.common
-        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
-        with:
-          repository: ansible-collections/cloud.common
-          path: ${{ env.cloud_common }}
-          ref: main
-
-      - name: checkout ansible-collections/ansible.posix
-        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
-        with:
-          repository: ansible-collections/ansible.posix
-          path: ${{ env.ansible_posix }}
-          ref: main
-
-      - name: checkout ansible-collections/community.general
-        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
-        with:
-          repository: ansible-collections/community.general
-          path: ${{ env.community_general }}
-          ref: main
-
       - name: Install fallible (ansible)
         run: pip3 install --upgrade 'fallible[compat]'
+        shell: bash
+
+      - name: Disable selinux with selinux_please_lie_to_me
+        run: |
+          python3 -m pip install wheel --upgrade
+          python3 -m pip uninstall -y selinux
+          python3 -m pip install selinux_please_lie_to_me
+          python3 -m pip install -r requirements.txt -r test-requirements.txt
         shell: bash
 
       - name: create kubernetes cluster
@@ -118,38 +98,18 @@ jobs:
         with:
           node_image: "kindest/node:v1.29.2"
 
-      - name: Install wheel now for faster builds
-        run: python3 -m pip install wheel --upgrade
-        shell: bash
+      - name: Build and install collection
+        id: install-src
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.source }}
 
-      - name: Disable selinux with selinux_please_lie_to_me
+      # Install collection dependencies
+      - name: Install collections dependencies
         run: |
-          python3 -m pip uninstall -y selinux
-          python3 -m pip install selinux_please_lie_to_me
-        shell: bash
-
-      - name: Install collection python requirements
-        run: python3 -m pip install -r requirements.txt -r test-requirements.txt
-        shell: bash
-        working-directory: ${{ steps.install-src.outputs.collection_path }}
-
-      - name: install cloud.common collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
-        with:
-          install_python_dependencies: true
-          source_path: ${{ env.cloud_common }}
-
-      - name: install ansible.posix collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
-        with:
-          install_python_dependencies: true
-          source_path: ${{ env.ansible_posix }}
-
-      - name: install community.general collection
-        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
-        with:
-          install_python_dependencies: false
-          source_path: ${{ env.community_general }}
+          wget https://raw.githubusercontent.com/abikouo/gha_testing/refs/heads/main/k8s_test_requirements.yml -o /tmp/requirements.yml
+          ansible-galaxy collection install -r /tmp/requirements.yml
 
       - name: Ensure ansible-test version
         run: ansible-test --version
@@ -162,6 +122,7 @@ jobs:
           --no-temp-workdir
           --color
           --skip-tags False
+          --python 3.12
           ${{ steps.targets.outputs.ansible_test_targets }}
           -v
         shell: bash
