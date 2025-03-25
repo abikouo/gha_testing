@@ -129,14 +129,9 @@ jobs:
         shell: bash
 
       - name: Install collection python requirements
-        run: python3 -m pip install -r requirements.txt test-requirements.txt
+        run: python3 -m pip install -r requirements.txt -r test-requirements.txt
         shell: bash
         working-directory: ${{ steps.install-src.outputs.collection_path }}
-
-      - name: Set environment variables
-        run: echo "ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}" >> $GITHUB_ENV
-        shell: bash
-        if: inputs.ansible_test_environment != ''
 
       - name: Run integration tests
         run: >-
