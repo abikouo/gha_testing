@@ -73,18 +73,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '${{ env.python_version }}'
-    
-      - name: Install virtualenv
-        run: |
-          sudo apt-get remove --purge ansible
-        shell: bash
 
-      - name: Create virtualenv
-        run: |
-          python3 -m venv /home/runner/collections/env
-          pip install 'fallible[compat]'
-          source /home/runner/collections/env/bin/activate
-          ansible-test --version
+      - name: Install ansible (fallible)
+        run: pip3 install --upgrade 'fallible[compat]'
         shell: bash
 
       - name: Checkout kubernetes.core repository
@@ -93,22 +84,6 @@ jobs:
           repository: ${{ inputs.repository }}
           path: ${{ env.source }}
           ref: ${{ inputs.branch }}
-
-      # - name: Build virtual environment
-      #   run: |
-      #     python3 -m pip uninstall ansible-core
-      #     ansible-test --version
-      #   shell: bash
-      #   working-directory: ${{ env.source }}
-
-      # - name: Set up Python ${{ env.python_version }}
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: '${{ env.python_version }}'
-
-      # - name: Install fallible (ansible)
-      #   run: pip3 install --upgrade 'fallible[compat]'
-      #   shell: bash
 
       - name: identify collection
         id: identify
@@ -154,7 +129,7 @@ jobs:
 
       - name: Run integration tests
         run: >-
-          ansible-test integration
+          fallible-test integration
           --diff
           --no-temp-workdir
           --color
