@@ -28,8 +28,8 @@ jobs:
           result = {x+1: v for x, v in enumerate(os.environ.get("ALL_TARGETS").split(","))}
           all_jobs = list(result.keys())
           with open(os.environ.get('GITHUB_OUTPUT'), "a", encoding="utf-8") as fh:
-              fh.write(f"ansible_test_targets='{json.dumps(result)}'\n")
-              fh.write(f"all_jobs='{json.dumps(all_jobs)}'\n")
+              fh.write(f"ansible_test_targets={json.dumps(result)}\n")
+              fh.write(f"all_jobs={json.dumps(all_jobs)}\n")
         shell: python
         env:
           ALL_TARGETS: ${{ inputs.test_targets }}
