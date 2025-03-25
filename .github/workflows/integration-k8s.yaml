@@ -134,7 +134,14 @@ jobs:
         working-directory: ${{ steps.install-src.outputs.collection_path }}
 
       - name: Run integration tests
-        run: ansible-test integration ${{ steps.targets.outputs.ansible_test_targets }} -v
+        run: >-
+          ansible-test integration
+          --diff
+          --no-temp-workdir
+          --color
+          --skip-tags False
+          ${{ steps.targets.outputs.ansible_test_targets }}
+          -v
         shell: bash
         working-directory: ${{ steps.install-src.outputs.collection_path }}
         env:
