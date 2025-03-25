@@ -87,12 +87,12 @@ jobs:
           ansible-test --version
         shell: bash
 
-      # - name: Checkout kubernetes.core repository
-      #   uses: actions/checkout@v3
-      #   with:
-      #     repository: ${{ inputs.repository }}
-      #     path: ${{ env.source }}
-      #     ref: ${{ inputs.branch }}
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository }}
+          path: ${{ env.source }}
+          ref: ${{ inputs.branch }}
 
       # - name: Build virtual environment
       #   run: |
@@ -110,59 +110,59 @@ jobs:
       #   run: pip3 install --upgrade 'fallible[compat]'
       #   shell: bash
 
-      # - name: identify collection
-      #   id: identify
-      #   uses: ansible-network/github_actions/.github/actions/identify_collection@main
-      #   with:
-      #     source_path: ${{ env.source }}
+      - name: identify collection
+        id: identify
+        uses: ansible-network/github_actions/.github/actions/identify_collection@main
+        with:
+          source_path: ${{ env.source }}
 
-      # - name: Build collection
-      #   run: ansible-galaxy collection build -vvv
-      #   shell: bash
-      #   working-directory: ${{ env.source }}
+      - name: Build collection
+        run: ansible-galaxy collection build -vvv
+        shell: bash
+        working-directory: ${{ env.source }}
 
-      # - name: Install collection and dependencies (with --pre flag)
-      #   run: ansible-galaxy collection install ./${{ steps.identify.outputs.tar_file }} --pre -p /home/runner/collections
-      #   shell: bash
-      #   working-directory: ${{ env.source }}
+      - name: Install collection and dependencies (with --pre flag)
+        run: ansible-galaxy collection install ./${{ steps.identify.outputs.tar_file }} --pre -p /home/runner/collections
+        shell: bash
+        working-directory: ${{ env.source }}
 
-      # - name: Disable selinux with selinux_please_lie_to_me
-      #   run: |
-      #     python3 -m pip install wheel --upgrade
-      #     python3 -m pip uninstall -y selinux
-      #     python3 -m pip install selinux_please_lie_to_me
-      #     python3 -m pip install -r requirements.txt -r test-requirements.txt
-      #   shell: bash
-      #   working-directory: ${{ env.source }}
+      - name: Disable selinux with selinux_please_lie_to_me
+        run: |
+          python3 -m pip install wheel --upgrade
+          python3 -m pip uninstall -y selinux
+          python3 -m pip install selinux_please_lie_to_me
+          python3 -m pip install -r requirements.txt -r test-requirements.txt
+        shell: bash
+        working-directory: ${{ env.source }}
 
-      # - name: create kubernetes cluster
-      #   uses: helm/kind-action@v1.8.0
-      #   with:
-      #     node_image: "kindest/node:v1.29.2"
+      - name: create kubernetes cluster
+        uses: helm/kind-action@v1.8.0
+        with:
+          node_image: "kindest/node:v1.29.2"
 
-      # # Install collection dependencies
-      # - name: Install collections dependencies
-      #   run: |
-      #     ansible-galaxy collection install cloud.common
-      #     ansible-galaxy collection install ansible.posix
-      #     ansible-galaxy collection install community.general
-      #   shell: bash
+      # Install collection dependencies
+      - name: Install collections dependencies
+        run: |
+          ansible-galaxy collection install cloud.common
+          ansible-galaxy collection install ansible.posix
+          ansible-galaxy collection install community.general
+        shell: bash
 
-      # - name: Ensure ansible-test version
-      #   run: ansible-test --version
-      #   shell: bash
+      - name: Ensure ansible-test version
+        run: ansible-test --version
+        shell: bash
 
-      # - name: Run integration tests
-      #   run: >-
-      #     ansible-test integration
-      #     --diff
-      #     --no-temp-workdir
-      #     --color
-      #     --skip-tags False
-      #     --python 3.12
-      #     ${{ steps.targets.outputs.ansible_test_targets }}
-      #     -v
-      #   shell: bash
-      #   working-directory: /home/runner/collections/ansible_collections/kubernetes/core
-      #   env:
-      #     ENABLE_TURBO_MODE: ${{ matrix.enable-turbo-mode }}
+      - name: Run integration tests
+        run: >-
+          ansible-test integration
+          --diff
+          --no-temp-workdir
+          --color
+          --skip-tags False
+          --python 3.12
+          ${{ steps.targets.outputs.ansible_test_targets }}
+          -v
+        shell: bash
+        working-directory: /home/runner/collections/ansible_collections/kubernetes/core
+        env:
+          ENABLE_TURBO_MODE: ${{ matrix.enable-turbo-mode }}
