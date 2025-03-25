@@ -69,19 +69,37 @@ jobs:
         run: |
           echo "ansible_test_targets -> ${{ steps.targets.outputs.ansible_test_targets }}"
 
-      - name: Checkout kubernetes.core repository
-        uses: actions/checkout@v3
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v4
         with:
-          repository: ${{ inputs.repository }}
-          path: ${{ env.source }}
-          ref: ${{ inputs.branch }}
+          python-version: '${{ env.python_version }}'
+    
+      - name: Install virtualenv
+        run: 
+          sudo apt-get update
+          sudo apt-get install python3-virtualenv
+        shell: bash
 
-      - name: Build virtual environment
+      - name: Create virtualenv
         run: |
-          python3 -m pip uninstall ansible-core
+          virtualenv --no-site-packages --python 3.12 /home/runner/collections/env
+          source /home/runner/collections/env/bin/activate
           ansible-test --version
         shell: bash
-        working-directory: ${{ env.source }}
+
+      # - name: Checkout kubernetes.core repository
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: ${{ inputs.repository }}
+      #     path: ${{ env.source }}
+      #     ref: ${{ inputs.branch }}
+
+      # - name: Build virtual environment
+      #   run: |
+      #     python3 -m pip uninstall ansible-core
+      #     ansible-test --version
+      #   shell: bash
+      #   working-directory: ${{ env.source }}
 
       # - name: Set up Python ${{ env.python_version }}
       #   uses: actions/setup-python@v4
