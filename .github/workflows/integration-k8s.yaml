@@ -78,13 +78,7 @@ jobs:
 
       - name: Build virtual environment
         run: |
-          python3 -m venv /home/runner/ansible_env
-          source /home/runner/ansible_env/bin/activate
-          pip3 install --upgrade 'fallible[compat]'
-          python3 -m pip install wheel --upgrade
-          python3 -m pip uninstall -y selinux
-          python3 -m pip install selinux_please_lie_to_me
-          python3 -m pip install -r requirements.txt -r test-requirements.txt
+          python3 -m pip uninstall ansible-core
           ansible-test --version
         shell: bash
         working-directory: ${{ env.source }}
