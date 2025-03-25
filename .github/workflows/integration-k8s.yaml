@@ -1,0 +1,156 @@
+name: Integration kubernetes.core
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: The repository
+        default: abikouo/kubernetes.core
+        type: string
+      branch:
+        description: The branch to checkout
+        type: string
+      test_targets:
+        description: the list of targets to test
+        type: string
+        required: true
+
+jobs:
+  splitter:
+    runs-on: ubuntu-latest
+    outputs:
+      ansible_test_targets: ${{ steps.split.outputs.ansible_test_targets }}
+      all_jobs: ${{ steps.split.outputs.all_jobs }}
+    steps:
+      - name: Read target
+        id: split
+        run: |
+          import json, os
+          result = {x+1: v for x, v in enumerate(os.environ.get("ALL_TARGETS").split(","))}
+          all_jobs = list(result.keys())
+          with open(os.environ.get('GITHUB_OUTPUT'), "a", encoding="utf-8") as fh:
+              fh.write(f"ansible_test_targets='{json.dumps(result)}'\n")
+              fh.write(f"all_jobs='{json.dumps(all_jobs)}'\n")
+        shell: python
+        env:
+          ALL_TARGETS: ${{ inputs.test_targets }}
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs:
+      - splitter
+    if: ${{ needs.splitter.outputs.ansible_test_targets != '' }}
+    env:
+      source: "./source"
+      cloud_common: "./cloudcommon"
+      ansible_posix: "./ansible_posix"
+      community_general: "./community_general"
+      python_version: '3.12'
+    strategy:
+      fail-fast: false
+      matrix:
+        enable-turbo-mode:
+          - true
+          - false
+        workflow-id: ${{ fromJson(needs.splitter.outputs.all_jobs) }}
+    name: "integration-fallible-${{ matrix.workflow-id }}-enable_turbo=${{ matrix.enable-turbo-mode }}"
+    steps:
+      - name: Select target to run
+        id: targets
+        run: |
+          import json, os
+          with open(os.environ.get('GITHUB_OUTPUT'), "a", encoding="utf-8") as fh:
+              fh.write(f'ansible_test_targets={json.loads(os.environ.get("ALL_TEST_TARGETS")).get(os.environ.get("WORKFLOW_ID"))}\n')
+        shell: python
+        env:
+          ALL_TEST_TARGETS: ${{ needs.splitter.outputs.ansible_test_targets }}
+          WORKFLOW_ID: ${{ matrix.workflow-id }}
+
+      - name: Display ansible test targets
+        run: |
+          echo "ansible_test_targets -> ${{ steps.targets.outputs.ansible_test_targets }}"
+
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository }}
+          path: ${{ env.source }}
+          ref: ${{ inputs.branch }}
+
+      - name: Set up Python ${{ env.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: '${{ env.python_version }}'
+
+      - name: Build and install collection
+        id: install-src
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.source }}
+
+      - name: checkout ansible-collections/cloud.common
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/cloud.common
+          path: ${{ env.cloud_common }}
+          ref: main
+
+      - name: checkout ansible-collections/ansible.posix
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/ansible.posix
+          path: ${{ env.ansible_posix }}
+          ref: main
+
+      - name: checkout ansible-collections/community.general
+        uses: ansible-network/github_actions/.github/actions/checkout_dependency@main
+        with:
+          repository: ansible-collections/community.general
+          path: ${{ env.community_general }}
+          ref: main
+
+      - name: Install fallible (ansible)
+        run: pip3 install --upgrade 'fallible[compat]'
+        shell: bash
+
+      - name: create kubernetes cluster
+        uses: helm/kind-action@v1.8.0
+        with:
+          node_image: "kindest/node:v1.29.2"
+
+      - name: Install wheel now for faster builds
+        run: python3 -m pip install wheel --upgrade
+        shell: bash
+
+      - name: Disable selinux with selinux_please_lie_to_me
+        run: |
+          python3 -m pip uninstall -y selinux
+          python3 -m pip install selinux_please_lie_to_me
+        shell: bash
+
+      - name: Install collection python requirements
+        run: python3 -m pip install requirements.txt test-requirements.txt
+        shell: bash
+        working-directory: ${{ steps.install-src.outputs.collection_path }}
+
+      - name: Set environment variables
+        run: echo "ENABLE_TURBO_MODE=${{ matrix.enable-turbo-mode }}" >> $GITHUB_ENV
+        shell: bash
+        if: inputs.ansible_test_environment != ''
+
+      - name: Run integration tests
+        run: >-
+          ansible-test integration
+          --diff
+          --no-temp-workdir
+          --color
+          --skip-tags False
+          --retry-on-error
+          --continue-on-error
+          --python ${{ env.python_version }}
+          -v
+          ${{ steps.targets.outputs.ansible_test_targets }}
+        shell: bash
+        working-directory: ${{ steps.install-src.outputs.collection_path }}
+        env:
+          ENABLE_TURBO_MODE: ${{ matrix.enable-turbo-mode }}
