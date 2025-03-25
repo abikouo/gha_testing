@@ -65,20 +65,29 @@ jobs:
           ALL_TEST_TARGETS: ${{ needs.splitter.outputs.ansible_test_targets }}
           WORKFLOW_ID: ${{ matrix.workflow-id }}
 
-      - name: Test ansible version
-        run: ansible-test --version
+      - name: Display ansible test targets
+        run: |
+          echo "ansible_test_targets -> ${{ steps.targets.outputs.ansible_test_targets }}"
+
+      - name: Checkout kubernetes.core repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository }}
+          path: ${{ env.source }}
+          ref: ${{ inputs.branch }}
+
+      - name: Build virtual environment
+        run: |
+          python3 -m venv /home/runner/ansible_env
+          source /home/runner/ansible_env/bin/activate
+          pip3 install --upgrade 'fallible[compat]'
+          python3 -m pip install wheel --upgrade
+          python3 -m pip uninstall -y selinux
+          python3 -m pip install selinux_please_lie_to_me
+          python3 -m pip install -r requirements.txt -r test-requirements.txt
+          ansible-test --version
         shell: bash
-
-      # - name: Display ansible test targets
-      #   run: |
-      #     echo "ansible_test_targets -> ${{ steps.targets.outputs.ansible_test_targets }}"
-
-      # - name: Checkout kubernetes.core repository
-      #   uses: actions/checkout@v3
-      #   with:
-      #     repository: ${{ inputs.repository }}
-      #     path: ${{ env.source }}
-      #     ref: ${{ inputs.branch }}
+        working-directory: ${{ env.source }}
 
       # - name: Set up Python ${{ env.python_version }}
       #   uses: actions/setup-python@v4
