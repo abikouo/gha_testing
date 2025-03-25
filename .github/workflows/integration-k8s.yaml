@@ -133,6 +133,24 @@ jobs:
         shell: bash
         working-directory: ${{ steps.install-src.outputs.collection_path }}
 
+      - name: install cloud.common collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.cloud_common }}
+
+      - name: install ansible.posix collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.ansible_posix }}
+
+      - name: install community.general collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: false
+          source_path: ${{ env.community_general }}
+
       - name: Run integration tests
         run: >-
           ansible-test integration
