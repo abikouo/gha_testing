@@ -34,7 +34,7 @@ jobs:
         env:
           ALL_TARGETS: ${{ inputs.test_targets }}
   integration:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     needs:
       - splitter
@@ -82,7 +82,7 @@ jobs:
 
       - name: Create virtualenv
         run: |
-          virtualenv --no-site-packages --python 3.12 /home/runner/collections/env
+          virtualenv --no-site-packages --python 3.11 /home/runner/collections/env
           source /home/runner/collections/env/bin/activate
           ansible-test --version
         shell: bash
