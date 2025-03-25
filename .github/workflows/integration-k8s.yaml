@@ -151,6 +151,10 @@ jobs:
           install_python_dependencies: false
           source_path: ${{ env.community_general }}
 
+      - name: Ensure ansible-test version
+        run: ansible-test --version
+        shell: bash
+
       - name: Run integration tests
         run: >-
           ansible-test integration
