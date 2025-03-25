@@ -76,13 +76,13 @@ jobs:
     
       - name: Install virtualenv
         run: |
-          sudo apt-get update
-          sudo apt-get install python3-virtualenv
+          sudo apt-get uninstall ansible
         shell: bash
 
       - name: Create virtualenv
         run: |
-          virtualenv --no-site-packages --python python3.12 /home/runner/collections/env
+          python3 -m venv /home/runner/collections/env
+          pip install 'fallible[compat]'
           source /home/runner/collections/env/bin/activate
           ansible-test --version
         shell: bash
