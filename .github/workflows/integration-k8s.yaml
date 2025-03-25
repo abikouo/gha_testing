@@ -82,7 +82,7 @@ jobs:
 
       - name: Create virtualenv
         run: |
-          virtualenv --no-site-packages --python python3.12 /home/runner/collections/env
+          virtualenv --python python3.12 /home/runner/collections/env
           source /home/runner/collections/env/bin/activate
           ansible-test --version
         shell: bash
