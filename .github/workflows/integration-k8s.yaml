@@ -138,6 +138,6 @@ jobs:
           ${{ steps.targets.outputs.ansible_test_targets }}
           -v
         shell: bash
-        working-directory: ${{ steps.install-src.outputs.collection_path }}
+        working-directory: /home/runner/collections/ansible_collections/kubernetes/core
         env:
           ENABLE_TURBO_MODE: ${{ matrix.enable-turbo-mode }}
