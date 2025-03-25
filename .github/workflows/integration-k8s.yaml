@@ -76,7 +76,7 @@ jobs:
     
       - name: Install virtualenv
         run: |
-          sudo apt-get uninstall ansible
+          sudo apt-get remove --purge ansible
         shell: bash
 
       - name: Create virtualenv
