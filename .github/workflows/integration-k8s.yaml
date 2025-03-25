@@ -94,12 +94,23 @@ jobs:
           node_image: "kindest/node:v1.29.2"
 
       # Install collection dependencies
-      - name: Install collections dependencies
-        run: |
-          ansible-galaxy collection install cloud.common
-          ansible-galaxy collection install ansible.posix
-          ansible-galaxy collection install community.general
-        shell: bash
+      - name: install cloud.common collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.cloud_common }}
+
+      - name: install ansible.posix collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: true
+          source_path: ${{ env.ansible_posix }}
+
+      - name: install community.general collection
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+          install_python_dependencies: false
+          source_path: ${{ env.community_general }}
 
       - name: Ensure ansible-test version
         run: ansible-test --version
