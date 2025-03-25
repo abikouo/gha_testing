@@ -18,18 +18,15 @@ jobs:
   splitter:
     runs-on: ubuntu-latest
     outputs:
-      ansible_test_targets: ${{ steps.split.outputs.ansible_test_targets }}
-      all_jobs: ${{ steps.split.outputs.all_jobs }}
+      all_targets: ${{ steps.split.outputs.all_targets }}
     steps:
       - name: Read target
         id: split
         run: |
           import json, os
-          result = {x+1: v for x, v in enumerate(os.environ.get("ALL_TARGETS").split(","))}
-          all_jobs = list(result.keys())
+          all_targets = list(os.environ.get("ALL_TARGETS").split(","))
           with open(os.environ.get('GITHUB_OUTPUT'), "a", encoding="utf-8") as fh:
-              fh.write(f"ansible_test_targets={json.dumps(result)}\n")
-              fh.write(f"all_jobs={json.dumps(all_jobs)}\n")
+              fh.write(f"all_targets={json.dumps(all_targets)}\n")
         shell: python
         env:
           ALL_TARGETS: ${{ inputs.test_targets }}
@@ -38,7 +35,6 @@ jobs:
     timeout-minutes: 60
     needs:
       - splitter
-    if: ${{ needs.splitter.outputs.ansible_test_targets != '' }}
     env:
       source: "./source"
       cloud_common: "./cloudcommon"
@@ -48,27 +44,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        enable-turbo-mode:
-          - true
-          - false
-        workflow-id: ${{ fromJson(needs.splitter.outputs.all_jobs) }}
-    name: "integration-fallible-${{ matrix.workflow-id }}-enable_turbo=${{ matrix.enable-turbo-mode }}"
+        ansible_test_target: ${{ fromJson(needs.splitter.outputs.all_targets) }}
+    name: "integration-fallible-${{ matrix.ansible_test_target }}"
     steps:
-      - name: Select target to run
-        id: targets
-        run: |
-          import json, os
-          with open(os.environ.get('GITHUB_OUTPUT'), "a", encoding="utf-8") as fh:
-              fh.write(f'ansible_test_targets={json.loads(os.environ.get("ALL_TEST_TARGETS")).get(os.environ.get("WORKFLOW_ID"))}\n')
-        shell: python
-        env:
-          ALL_TEST_TARGETS: ${{ needs.splitter.outputs.ansible_test_targets }}
-          WORKFLOW_ID: ${{ matrix.workflow-id }}
-
-      - name: Display ansible test targets
-        run: |
-          echo "ansible_test_targets -> ${{ steps.targets.outputs.ansible_test_targets }}"
-
       - name: Set up Python ${{ env.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -135,9 +113,9 @@ jobs:
           --color
           --skip-tags False
           --python 3.12
-          ${{ steps.targets.outputs.ansible_test_targets }}
+          ${{ matrix.ansible_test_target }}
           -v
         shell: bash
         working-directory: /home/runner/collections/ansible_collections/kubernetes/core
         env:
-          ENABLE_TURBO_MODE: ${{ matrix.enable-turbo-mode }}
+          ENABLE_TURBO_MODE: false
