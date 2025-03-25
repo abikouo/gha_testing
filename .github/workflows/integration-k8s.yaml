@@ -94,6 +94,27 @@ jobs:
           node_image: "kindest/node:v1.29.2"
 
       # Install collection dependencies
+      - name: Checkout cloud.common repository
+        uses: actions/checkout@v3
+        with:
+          repository: ansible-collections/cloud.common
+          path: ${{ env.cloud_common }}
+          ref: main
+      
+      - name: Checkout ansible-collections/ansible.posix repository
+        uses: actions/checkout@v3
+        with:
+          repository: ansible-collections/ansible.posix
+          path: ${{ env.ansible_posix }}
+          ref: main
+      
+      - name: Checkout ansible-collections/community.general repository
+        uses: actions/checkout@v3
+        with:
+          repository: ansible-collections/community.general
+          path: ${{ env.community_general }}
+          ref: main
+
       - name: install cloud.common collection
         uses: ansible-network/github_actions/.github/actions/build_install_collection@main
         with:
