@@ -1,0 +1,68 @@
+---
+name: integration tests cloud.common
+    
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: The repository
+        default: abikouo/cloud.common
+        type: string
+      branch:
+        description: The branch to checkout
+        type: string
+        default: fix_issues_2.19
+      python_version:
+        description: The python version to test against
+        default: "3.12"
+        type: string
+      ansible_version:
+        description: The ansible version to test against
+        type: string
+        default: devel
+      test_targets:
+        description: The list of targets to test
+        type: string
+        default: turbo_mode
+    
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      source: "./cloud_common"
+    steps:
+      - name: Checkout cloud.common repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repository }}
+          path: ${{ env.source }}
+          ref: ${{ inputs.branch }}
+    
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+           python-version: ${{ inputs.python_version }}
+    
+      # install ansible
+      - name: Install ansible-core devel
+        run: >-
+            python3 -m pip install
+            https://github.com/ansible/ansible/archive/${{ inputs.ansible_version }}.tar.gz
+            --disable-pip-version-check
+        shell: bash
+    
+      - name: install cloud.common collection
+        id: install-cloud-common
+        uses: ansible-network/github_actions/.github/actions/build_install_collection@main
+        with:
+            install_python_dependencies: true
+            source_path: ${{ env.source }}
+    
+      - name: Run integration tests
+        uses: ansible-network/github_actions/.github/actions/ansible_test_integration@main
+        with:
+            collection_path: ${{ steps.install-cloud-common.outputs.collection_path }}
+            python_version: ${{ inputs.python_version }}
+            ansible_version: ${{ inputs.ansible_version }}
+            ansible_test_targets: "${{ inputs.test_targets }}"
