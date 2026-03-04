@@ -24,6 +24,9 @@ jobs:
       - name: Install amazon.aws collection
         run: ansible-galaxy collection install amazon.aws
 
+      - name: Install test requirements.txt
+        run: pip install -r ~/.ansible/collections/ansible_collections/amazon/aws/test-requirements.txt
+
       - name: Request AWS temporary credentials
         id: aws_session
         uses: aws-actions/configure-aws-credentials@v4
