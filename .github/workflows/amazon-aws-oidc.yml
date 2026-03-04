@@ -24,6 +24,23 @@ jobs:
       - name: Install amazon.aws collection
         run: ansible-galaxy collection install amazon.aws
 
+      - name: Request AWS temporary credentials
+        id: aws_session
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GHA_IAM_ROLE }}
+          aws-region: us-east-1
+          output-credentials: true
+
+      - name: Make AWS credentials visible for ansible-test
+        run: >-
+          echo "[default]" > ~/.ansible/collections/ansible_collections/amazon/aws/tests/integration/cloud-config-aws.ini &&
+          echo "aws_region: us-east-1" >> ~/.ansible/collections/ansible_collections/amazon/aws/tests/integration/cloud-config-aws.ini &&
+          echo "aws_access_key: ${{ steps.aws_session.outputs.aws-access-key-id }}" >> ~/.ansible/collections/ansible_collections/amazon/aws/tests/integration/cloud-config-aws.ini &&
+          echo "aws_secret_key: ${{ steps.aws_session.outputs.aws-secret-access-key }}" >> ~/.ansible/collections/ansible_collections/amazon/aws/tests/integration/cloud-config-aws.ini &&
+          echo "security_token: ${{ steps.aws_session.outputs.aws-session-token }}" >> ~/.ansible/collections/ansible_collections/amazon/aws/tests/integration/cloud-config-aws.ini
+        shell: bash
+
       - name: Run integration tests for ec2_key
         run: >-
           cd ~/.ansible/collections/ansible_collections/amazon/aws && 
