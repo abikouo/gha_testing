@@ -1,0 +1,30 @@
+---
+name: amazon.aws integrationt tests using OIDC
+    
+on:
+  workflow_dispatch:
+    
+permissions:
+  id-token: write
+    
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+           python-version: 3.12
+    
+      # install ansible
+      - name: Install ansible-core
+        run: pip install ansible-core
+
+      - name: Install amazon.aws collection
+        run: ansible-galaxy collection install amazon.aws
+
+      - name: Run integration tests for ec2_key
+        run: >-
+          cd ~/.ansible/collections/ansible_collections/amazon/aws && 
+          ansible-test integration --python 3.12 ec2_key -v
