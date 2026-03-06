@@ -1,0 +1,33 @@
+---
+name: Update linters Job
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+
+jobs:
+  update-job-status-pending:
+    uses: abikouo/cloud-content-ci-automation/.github/workflows/update-job-status.yml@aws_oidc_1
+    with:
+      job_name: 'run-tests'
+
+  run-tests:
+    name: Run tests sample tests
+    needs: update-job-status-pending
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout collection
+        uses: actions/checkout@v4
+
+      - name: List file from collection
+        run: find .github -type f
+        shell: bash
+
+  update-job-status-result:
+    needs: run-tests
+    uses: abikouo/cloud-content-ci-automation/.github/workflows/update-job-status.yml@aws_oidc_1
+    with:
+      job_name: 'run-tests'
+      job_result: '${{ needs.run-tests.result }}'
