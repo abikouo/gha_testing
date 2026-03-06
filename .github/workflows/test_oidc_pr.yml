@@ -12,6 +12,7 @@ jobs:
     uses: abikouo/cloud-content-ci-automation/.github/workflows/update-job-status.yml@aws_oidc_1
     with:
       job_name: 'run-tests'
+      workflow: 0
 
   run-tests:
     name: Run tests sample tests
@@ -31,3 +32,4 @@ jobs:
     with:
       job_name: 'run-tests'
       job_result: '${{ needs.run-tests.result }}'
+      workflow_start: "2026-03-06T15:00:00Z"
