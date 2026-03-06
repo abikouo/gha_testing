@@ -12,7 +12,7 @@ jobs:
     uses: abikouo/cloud-content-ci-automation/.github/workflows/update-job-status.yml@aws_oidc_1
     with:
       job_name: 'run-tests'
-      workflow: 0
+      workflow_start: 0
 
   run-tests:
     name: Run tests sample tests
