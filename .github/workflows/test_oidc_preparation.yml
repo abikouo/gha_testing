@@ -1,0 +1,7 @@
+---
+name: Prepare integration tests
+on: pull_request
+
+jobs:
+  save-pr-ref:
+    uses: abikouo/cloud-content-ci-automation/.github/workflows/integration-prepare.yml@aws_oidc_1
