@@ -24,8 +24,17 @@ jobs:
       - name: Checkout collection
         uses: actions/checkout@v4
 
-      - name: List file from collection
-        run: find .github -type f
+      - name: list changes for pull request
+        id: splitter
+        uses: abikouo/cloud-content-ci-automation/.github/actions/ansible_test_splitter@aws_oidc_1
+        with:
+          collections_to_test: "./"
+          total_jobs: 4
+
+      - name: Display test all the targets value
+        run: echo "TEST_ALL_THE_TARGETS => ${TEST_TARGETS}"
+        env:
+          TEST_TARGETS: ${{ needs.splitter.outputs.test_all_the_targets }}
         shell: bash
 
   update-job-status-result:
