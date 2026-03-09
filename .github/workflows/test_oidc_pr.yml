@@ -19,6 +19,8 @@ jobs:
   run-tests:
     name: Run tests sample tests
     needs: update-job-status-pending
+    permissions:
+      pull-requests: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout collection
