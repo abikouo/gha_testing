@@ -4,4 +4,4 @@ on: pull_request
 
 jobs:
   save-pr-ref:
-    uses: abikouo/cloud-content-ci-automation/.github/workflows/integration-prepare.yml@aws_oidc_1
+    uses: abikouo/cloud-content-ci-automation/.github/workflows/upload-refs.yml@aws_oidc_1

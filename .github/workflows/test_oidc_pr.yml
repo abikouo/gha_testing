@@ -16,27 +16,33 @@ jobs:
     with:
       job_name: 'run-tests'
 
+  download-refs:
+    needs: update-job-status-pending
+    uses: abikouo/cloud-content-ci-automation/.github/workflows/download-refs.yml@aws_oidc_1
+
   run-tests:
     name: Run tests sample tests
-    needs: update-job-status-pending
+    needs: download-refs
     permissions:
       pull-requests: read
+    env:
+      base_ref: ${{ needs.download-refs.outputs.content }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout collection
         uses: actions/checkout@v4
 
-      - name: list changes for pull request
-        id: splitter
-        uses: abikouo/cloud-content-ci-automation/.github/actions/ansible_test_splitter@aws_oidc_1
-        with:
-          collections_to_test: "./"
-          total_jobs: 4
+      # - name: list changes for pull request
+      #   id: splitter
+      #   uses: abikouo/cloud-content-ci-automation/.github/actions/ansible_test_splitter@aws_oidc_1
+      #   with:
+      #     collections_to_test: "./"
+      #     total_jobs: 4
 
       - name: Display test all the targets value
-        run: echo "TEST_ALL_THE_TARGETS => ${TEST_TARGETS}"
+        run: echo "Pull request base ref => ${BASE_REF}"
         env:
-          TEST_TARGETS: ${{ needs.splitter.outputs.test_all_the_targets }}
+          BASE_REF: ${{ env.base_ref }}
         shell: bash
 
   update-job-status-result:
