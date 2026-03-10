@@ -56,12 +56,7 @@ jobs:
         with:
           collections_to_test: "${{ env.amazon_dir}}, ${{ env.community_dir }}"
           total_jobs: 4
-
-      - name: Display test all the targets value
-        run: echo "Pull request base ref => ${BASE_REF}"
-        env:
-          BASE_REF: ${{ env.base_ref }}
-        shell: bash
+          base_ref: ${{ env.base_ref }}
 
   update-job-status-result:
     needs: run-tests
