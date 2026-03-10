@@ -27,17 +27,35 @@ jobs:
       pull-requests: read
     env:
       base_ref: ${{ needs.download-refs.outputs.content }}
+      amazon_dir: "./amazon_aws"
+      community_dir: "./community_aws" 
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout collection
+      - name: Checkout amazon.aws collection
         uses: actions/checkout@v4
+        with:
+          repository: ansible-collections/amazon.aws
+          path: "${{ env.amazon_dir }}"
 
-      # - name: list changes for pull request
-      #   id: splitter
-      #   uses: abikouo/cloud-content-ci-automation/.github/actions/ansible_test_splitter@aws_oidc_1
-      #   with:
-      #     collections_to_test: "./"
-      #     total_jobs: 4
+      - name: Checkout community.aws collection
+        uses: actions/checkout@v4
+        with:
+          repository: ansible-collections/community.aws
+          path: "${{ env.community_dir }}"
+
+      - name: Add remote repository
+        run: |
+          cd ./amazon_aws
+          git remote add tremble https://github.com/tremble/amazon.aws.git
+          git fetch tremble
+          git checkout tremble/feature/s3-bucket-logging
+
+      - name: list changes for pull request
+        id: splitter
+        uses: abikouo/cloud-content-ci-automation/.github/actions/ansible_test_splitter@aws_oidc_1
+        with:
+          collections_to_test: "${{ env.amazon_dir}}, ${{ env.community_dir }}"
+          total_jobs: 4
 
       - name: Display test all the targets value
         run: echo "Pull request base ref => ${BASE_REF}"
