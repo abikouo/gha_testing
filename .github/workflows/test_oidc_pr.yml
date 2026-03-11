@@ -66,7 +66,6 @@ jobs:
     permissions:
       pull-requests: read
     env:
-      base_ref: ${{ needs.download-refs.outputs.content }}
       amazon_dir: "./amazon_aws"
       community_dir: "./community_aws" 
     runs-on: ubuntu-latest
@@ -76,7 +75,7 @@ jobs:
         job-id: ${{ fromJson(needs.ansible-test-splitter.outputs.jobs) }}
     name: "integration-${{ matrix.job-id }}"
     steps:
-      - name: Checkout amazon.aws collection
+      - name: Checkout repository
         uses: actions/checkout@v4
 
   update-job-status-result:
