@@ -30,8 +30,8 @@ jobs:
       amazon_dir: "./amazon_aws"
       community_dir: "./community_aws"
     outputs:
-      jobs: ${{ steps.compute.outputs.splitter_jobs }}
-      targets: ${{ steps.compute.outputs.splitter_targets }}
+      jobs: ${{ steps.compute.outputs.jobs }}
+      targets: ${{ steps.compute.outputs.targets }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout amazon.aws collection
@@ -53,21 +53,13 @@ jobs:
           git fetch tremble
           git checkout tremble/feature/s3-bucket-logging
 
-      # - name: list changes for pull request
-      #   id: compute
-      #   uses: abikouo/cloud-content-ci-automation/.github/actions/ansible_test_splitter@aws_oidc_1
-      #   with:
-      #     collections_to_test: "${{ env.amazon_dir}}, ${{ env.community_dir }}"
-      #     total_jobs: 4
-      #     base_ref: ${{ env.base_ref }}
-      
-      - name: Setting output
+      - name: list changes for pull request
         id: compute
-        run: echo "status=ansible" >> $GITHUB_OUTPUT
-
-      - name: Reading step outputs
-        run: |
-          echo "Status    => ${{ steps.compute.outputs.status }}"
+        uses: abikouo/cloud-content-ci-automation/.github/actions/ansible_test_splitter@aws_oidc_1
+        with:
+          collections_to_test: "${{ env.amazon_dir}}, ${{ env.community_dir }}"
+          total_jobs: 4
+          base_ref: ${{ env.base_ref }}
 
   run-tests:
     needs: ansible-test-splitter
