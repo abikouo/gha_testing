@@ -20,15 +20,18 @@ jobs:
     needs: update-job-status-pending
     uses: abikouo/cloud-content-ci-automation/.github/workflows/download-refs.yml@aws_oidc_1
 
-  run-tests:
-    name: Run tests sample tests
+  ansible-test-splitter:
+    name: ansible test splitter
     needs: download-refs
     permissions:
       pull-requests: read
     env:
       base_ref: ${{ needs.download-refs.outputs.content }}
       amazon_dir: "./amazon_aws"
-      community_dir: "./community_aws" 
+      community_dir: "./community_aws"
+    outputs:
+      jobs: ${{ steps.splitter.outputs.splitter_jobs }}
+      targets: ${{ steps.splitter.outputs.splitter_targets }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout amazon.aws collection
@@ -57,6 +60,24 @@ jobs:
           collections_to_test: "${{ env.amazon_dir}}, ${{ env.community_dir }}"
           total_jobs: 4
           base_ref: ${{ env.base_ref }}
+
+  run-tests:
+    needs: ansible-test-splitter
+    permissions:
+      pull-requests: read
+    env:
+      base_ref: ${{ needs.download-refs.outputs.content }}
+      amazon_dir: "./amazon_aws"
+      community_dir: "./community_aws" 
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        job-id: ${{ fromJson(needs.ansible-test-splitter.outputs.jobs) }}
+    name: "integration-${{ matrix.job-id }}"
+    steps:
+      - name: Checkout amazon.aws collection
+        uses: actions/checkout@v4
 
   update-job-status-result:
     needs: run-tests
