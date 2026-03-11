@@ -60,6 +60,11 @@ jobs:
           collections_to_test: "${{ env.amazon_dir}}, ${{ env.community_dir }}"
           total_jobs: 4
           base_ref: ${{ env.base_ref }}
+      
+      - name: Reading step outputs
+        run: |
+          echo "Spliiter Jobs    => ${{ steps.splitter.outputs.splitter_jobs }}"
+          echo "Spliiter Targets => ${{ steps.splitter.outputs.splitter_targets }}"
 
   run-tests:
     needs: ansible-test-splitter
