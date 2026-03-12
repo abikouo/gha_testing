@@ -67,7 +67,8 @@ jobs:
       pull-requests: read
     env:
       amazon_dir: "./amazon_aws"
-      community_dir: "./community_aws" 
+      community_dir: "./community_aws"
+      ansible_test_splitter_targets: "${{ needs.ansible-test-splitter.outputs.targets }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -77,6 +78,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Read job targets
+        id: read-targets
+        uses: abikouo/cloud-content-ci-automation/.github/actions/ansible_read_targets@aws_oidc_1
+        with:
+          job_id: "${{ matrix.job-id }}"
+          test_targets: ${{ env.ansible_test_splitter_targets }}
+
+      - name: Display ansible-test targets
+        run: echo "Job targets => ${TEST_TARGETS}"
+        env:
+          TEST_TARGETS: "${{ steps.read-targets.outputs.job_targets }}"
 
   update-job-status-result:
     needs: run-tests
