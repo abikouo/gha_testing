@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Update pull request counter
-        uses: ansible-network/github_actions/.github/actions/commit_to_pullrequest@4678c74a7d712d55e663c88f66eec6d9c3642550 # @main as of 2026-10-26
+        uses: abikouo/github_actions/.github/actions/commit_to_pullrequest@commit_to_pr_20261123
         with:
           commit_message: "update pull request counter"
           python_executable_url: "https://raw.githubusercontent.com/abikouo/gha_testing/main/scripts/update_counter.py"
