@@ -1,0 +1,21 @@
+---
+ci:
+  # This message MUST contain the "[counter]" marker that
+  # scripts/update_counter.py excludes from its count. Without the marker each
+  # autofix commit invalidates its own result and pre-commit.ci pushes forever.
+  autofix_commit_msg: "[counter] update pull request counter"
+  autofix_prs: true
+  autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
+  autoupdate_schedule: weekly
+
+repos:
+  - repo: local
+    hooks:
+      - id: update-counter
+        name: update pull request counter
+        entry: scripts/update_counter.py
+        language: script
+        # The hook reads the commit graph, not the staged files, so it must run
+        # on every invocation and receives no filenames.
+        pass_filenames: false
+        always_run: true
